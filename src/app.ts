@@ -1,16 +1,15 @@
 import express from 'express';
 import { rootRouter } from './router';
+import { requestId, notFoundHandler } from './core/middleware';
+import { errorHandler } from './core/http';
 
-/**
- * App Bootstrap
- * - Fokus API saja
- * - Middleware minimal untuk JSON
- * - Router utama dipasang pada prefix /api
- */
 const app: express.Application = express();
 
 app.use(express.json());
+app.use(requestId());
 app.use('/api', rootRouter);
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 export { app };
 export default app;

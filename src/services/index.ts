@@ -3,4 +3,4 @@
  * Service berisi logika bisnis dan berinteraksi dengan Repository.
  * Jangan menulis detail database di Service.
  */
-export {};
+export * from './health.service';

@@ -1,18 +1,16 @@
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
+import { asyncHandler } from '../core/http';
+import { healthController } from '../controllers';
+import { v1Router } from './v1';
+import { appConfig } from '../config';
 
-/**
- * Router utama (entry point)
- * - Hanya route /health untuk verifikasi server hidup
- * - Route bisnis/fitur akan ditambahkan kemudian
- */
 const rootRouter: Router = Router();
 
-rootRouter.get('/health', (req: Request, res: Response) => {
-  res.status(200).json({
-    status: 'ok',
-    uptime_seconds: Math.round(process.uptime()),
-  });
-});
+// Tetap dukung /api/health (lama)
+rootRouter.get('/health', asyncHandler(healthController.health));
+
+// Tambah versi: /api/v1/*
+rootRouter.use(`/${appConfig.apiVersion}`, v1Router);
 
 export { rootRouter };
 export default rootRouter;
