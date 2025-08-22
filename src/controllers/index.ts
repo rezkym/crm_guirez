@@ -3,4 +3,4 @@
  * Contoh penamaan: UsersController, HotelsController, RbacController, dsb.
  * Controller harus tetap tipis: validasi request ringan, lalu delegasikan ke Service.
  */
-export * from './health.controller';
+export * from './healthController';

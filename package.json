@@ -4,6 +4,7 @@
   "description": "CRM build from MindiMedia and Guirez",
   "main": "index.js",
   "scripts": {
+    "dev": "npx ts-node src/server.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
