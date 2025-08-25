@@ -4,8 +4,9 @@ import { randomUUID } from 'crypto';
 export function requestId() {
   return (req: Request, res: Response, next: NextFunction) => {
     const id = randomUUID();
-    (req as any).requestId = id;
     res.setHeader('X-Request-ID', id);
+    req.requestId = id;
+    res.locals.requestId = id;
     next();
   };
 }

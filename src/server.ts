@@ -1,3 +1,4 @@
+import './types/express-augment';
 import 'dotenv/config';
 import { app } from './app';
 import { appConfig } from './config';
