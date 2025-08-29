@@ -76,7 +76,6 @@
 - Place future migrations in `src/db/migrations/` and seeds in `src/db/seeders/`
 
 ### Authentication & Authorization
-- JWT-based authentication with Express request augmentation
 - Multi-level RBAC: global roles and hotel-specific permissions
 - Resource-action based permission checking
 
