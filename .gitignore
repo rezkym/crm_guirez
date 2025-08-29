@@ -1,2 +1,4 @@
 node_modules
+MD_LOG
 .claude
+.env

@@ -5,7 +5,12 @@
   "main": "index.js",
   "scripts": {
     "dev": "npx ts-node src/server.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db:migrate": "typeorm-ts-node-commonjs migration:run -d src/data/typeorm-data-source.ts",
+    "db:rollback": "typeorm-ts-node-commonjs migration:revert -d src/data/typeorm-data-source.ts",
+    "db:fresh": "typeorm-ts-node-commonjs schema:drop -d src/data/typeorm-data-source.ts && typeorm-ts-node-commonjs migration:run -d src/data/typeorm-data-source.ts",
+    "db:seed": "ts-node src/db/seeders/index.ts",
+    "db:refresh": "npm run db:fresh && npm run db:seed"
   },
   "author": "",
   "license": "ISC",
@@ -20,10 +25,13 @@
     "npm": "^11.5.2",
     "prettier": "^3.6.2",
     "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.9.2"
   },
   "dependencies": {
     "@types/uuid": "^10.0.0",
+    "mysql2": "^3.14.3",
+    "typeorm": "^0.3.26",
     "uuid": "^11.1.0"
   }
 }
