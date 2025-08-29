@@ -4,3 +4,4 @@
  * Controller harus tetap tipis: validasi request ringan, lalu delegasikan ke Service.
  */
 export * from './health.controller';
+export * from './auth.controller';

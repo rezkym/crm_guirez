@@ -1,6 +1,7 @@
 /**
- * Tempatkan service (use-cases) per fitur di direktori ini.
- * Service berisi logika bisnis dan berinteraksi dengan Repository.
- * Jangan menulis detail database di Service.
+ * Services exports
  */
+
 export * from './health.service';
+export * from './auth.service';
+export * from './token.service';

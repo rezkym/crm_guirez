@@ -5,8 +5,9 @@ export {}; // jadikan modul agar deklarasi global berlaku
 declare global {
   namespace Express {
     interface Request {
+      id: string;
       requestId?: string;
-      auth?: import('../core/middleware/auth').AuthContext;
+      auth?: import('../domain/auth').AuthContext;
     }
   }
 }

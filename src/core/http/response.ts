@@ -15,3 +15,15 @@ export const created = (res: Response, data: unknown, meta?: Record<string, unkn
 // Catatan: untuk konsistensi kontrak, kembalikan 200 dengan body kosong standar
 export const noContent = (res: Response, meta?: Record<string, unknown>) =>
   res.status(HTTP_STATUS.OK).json({ data: null, meta: metaOf(res, meta) });
+
+export const successResponse = (data?: any, meta?: any) => {
+  return { data, meta };
+};
+
+export const createSuccessResponse = (data?: any, requestId?: string) => {
+  return { data, meta: { requestId } };
+};
+
+export const createErrorResponse = (message: string, requestId?: string) => {
+  return { error: message, meta: { requestId } };
+};
