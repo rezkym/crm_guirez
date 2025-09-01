@@ -2,3 +2,7 @@ node_modules
 MD_LOG
 .claude
 .env
+
+project_structure.md
+gemini.md
+CRM_API_Complete.postman_collection.json
