@@ -1,0 +1,36 @@
+{
+  "entryPoints": [
+    "src/index.ts",
+    "src/controllers/**/*.ts",
+    "src/services/**/*.ts",
+    "src/domain/**/*.ts",
+    "src/rbac/**/*.ts",
+    "src/repositories/**/*.ts",
+    "src/models/**/*.ts"
+  ],
+  "plugin": ["typedoc-plugin-markdown"],
+  "out": "docs-site/docs/api-reference",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "hideGenerator": true,
+  "readme": "none",
+  "json": "build/typedoc.json",
+  "categorizeByGroup": true,
+  "groupOrder": [
+    "Controllers",
+    "Services",
+    "Domain",
+    "Models",
+    "Repositories",
+    "RBAC"
+  ],
+  "exclude": [
+    "**/node_modules/**",
+    "**/test/**",
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ],
+  "theme": "markdown",
+  "includeVersion": true,
+  "name": "CRM MindiMedia API Reference"
+}

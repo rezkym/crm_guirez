@@ -10,13 +10,22 @@
     "db:rollback": "typeorm-ts-node-commonjs migration:revert -d src/data/typeorm-data-source.ts",
     "db:fresh": "typeorm-ts-node-commonjs schema:drop -d src/data/typeorm-data-source.ts && typeorm-ts-node-commonjs migration:run -d src/data/typeorm-data-source.ts",
     "db:seed": "ts-node src/db/seeders/index.ts",
-    "db:refresh": "npm run db:fresh && npm run db:seed"
+    "db:refresh": "npm run db:fresh && npm run db:seed",
+    "docs:typedoc": "typedoc",
+    "docs:deps": "npx depcruise src --output-type dot | dot -Tsvg > docs-site/docs/architecture/clean-arch-deps.svg",
+    "docs:build": "npm run docs:typedoc && npm run docs:deps && cd docs-site && npm run build",
+    "docs:serve": "cd docs-site && npm start -- --port 3001",
+    "docs:serve:build": "cd docs-site && npm run serve -- --port 3001"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@docusaurus/core": "^3.8.1",
+    "@docusaurus/preset-classic": "^3.8.1",
+    "@docusaurus/theme-mermaid": "^3.8.1",
     "@types/express": "^5.0.3",
     "@types/node": "^24.3.0",
+    "dependency-cruiser": "^17.0.1",
     "dotenv": "^17.2.1",
     "eslint": "^9.33.0",
     "express": "^5.1.0",
@@ -26,6 +35,8 @@
     "prettier": "^3.6.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
+    "typedoc": "^0.28.12",
+    "typedoc-plugin-markdown": "^4.8.1",
     "typescript": "^5.9.2"
   },
   "dependencies": {
