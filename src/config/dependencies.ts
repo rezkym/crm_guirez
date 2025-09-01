@@ -2,6 +2,7 @@
  * Dependency injection container - wire semua dependencies
  */
 
+import { DataSource } from 'typeorm';
 import { PasswordService, RateLimitService } from '../core/security';
 import { securityConfig, authConfig, rateLimitConfig, validateAuthConfig } from '../config';
 import { 
@@ -10,6 +11,10 @@ import {
   MemoryRateLimitStore 
 } from '../data/memory';
 import { MemoryUserCredentialsRepository } from '../repositories/user.credentials.repository';
+import { SessionStoreTypeORM } from '../data/typeorm/session.store.typeorm';
+import { TokenStoreTypeORM } from '../data/typeorm/token.store.typeorm';
+import { UserCredentialsRepoTypeORM } from '../repositories/typeorm/user.credentials.repository.typeorm';
+import AppDataSource from '../data/typeorm-data-source';
 import { AuthService } from '../services/auth.service';
 import { TokenService } from '../services/token.service';
 
@@ -17,11 +22,12 @@ export interface AppDependencies {
   authService: AuthService;
   passwordService: PasswordService;
   rateLimitService: RateLimitService;
+  dataSource?: DataSource;
 }
 
 let dependencies: AppDependencies | null = null;
 
-export function initializeDependencies(): AppDependencies {
+export async function initializeDependencies(): Promise<AppDependencies> {
   if (dependencies) {
     return dependencies;
   }
@@ -29,16 +35,44 @@ export function initializeDependencies(): AppDependencies {
   // Validate configuration
   validateAuthConfig();
 
+  // Get data backend configuration
+  const dataBackend = process.env.DATA_BACKEND || 'db';
+  console.log(`Initializing dependencies with DATA_BACKEND=${dataBackend}`);
+
   // Initialize core services
   const passwordService = new PasswordService(securityConfig.password);
   
-  // Initialize stores (in-memory untuk sekarang)
-  const sessionStore = new MemorySessionStore();
-  const tokenStore = new MemoryTokenStore();
-  const rateLimitStore = new MemoryRateLimitStore();
+  let sessionStore;
+  let tokenStore;
+  let userCredentialsRepo;
+  let dataSource: DataSource | undefined;
+
+  if (dataBackend === 'db') {
+    // Initialize TypeORM DataSource
+    dataSource = AppDataSource;
+    
+    if (!dataSource.isInitialized) {
+      await dataSource.initialize();
+      console.log('TypeORM DataSource initialized');
+    }
+
+    // Initialize TypeORM adapters
+    sessionStore = new SessionStoreTypeORM(dataSource);
+    tokenStore = new TokenStoreTypeORM(dataSource);
+    userCredentialsRepo = new UserCredentialsRepoTypeORM(dataSource);
+    
+    console.log('Using TypeORM adapters for auth data');
+  } else {
+    // Initialize in-memory adapters (fallback for development)
+    sessionStore = new MemorySessionStore();
+    tokenStore = new MemoryTokenStore();
+    userCredentialsRepo = new MemoryUserCredentialsRepository();
+    
+    console.log('Using in-memory adapters for auth data');
+  }
   
-  // Initialize repositories
-  const userCredentialsRepo = new MemoryUserCredentialsRepository();
+  // Rate limit tetap menggunakan in-memory untuk sekarang
+  const rateLimitStore = new MemoryRateLimitStore();
   
   // Initialize services
   const rateLimitService = new RateLimitService(rateLimitConfig, rateLimitStore);
@@ -54,7 +88,8 @@ export function initializeDependencies(): AppDependencies {
   dependencies = {
     authService,
     passwordService,
-    rateLimitService
+    rateLimitService,
+    dataSource
   };
 
   // Setup cleanup interval
@@ -68,6 +103,17 @@ export function getDependencies(): AppDependencies {
     throw new Error('Dependencies not initialized. Call initializeDependencies() first.');
   }
   return dependencies;
+}
+
+/**
+ * Cleanup dependencies dan tutup koneksi DB
+ */
+export async function cleanupDependencies(): Promise<void> {
+  if (dependencies?.dataSource?.isInitialized) {
+    await dependencies.dataSource.destroy();
+    console.log('TypeORM DataSource destroyed');
+  }
+  dependencies = null;
 }
 
 /**

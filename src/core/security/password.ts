@@ -49,9 +49,34 @@ export class PasswordService {
    */
   async verifyPassword(password: string, hash: string, salt: string): Promise<boolean> {
     try {
+      // Support untuk format seeder (dev-salt-for-seeding + SHA512 + hex)
+      if (salt === 'dev-salt-for-seeding') {
+        return this.verifySeederPassword(password, hash, salt);
+      }
+      
+      // Format normal PasswordService (base64 + sha256)
       const computedHash = await this.hashPassword(password, salt);
       return computedHash === hash;
     } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Verify password menggunakan format seeder (pbkdf2 + SHA512 + hex)
+   */
+  private verifySeederPassword(password: string, hash: string, salt: string): boolean {
+    try {
+      const { pbkdf2Sync } = require('crypto');
+      const iterations = 210000; // Sama dengan seeder
+      const keyLength = 64;
+      const digest = 'sha512';
+      
+      const computedHash = pbkdf2Sync(password, salt, iterations, keyLength, digest);
+      const computedHashHex = computedHash.toString('hex');
+      
+      return computedHashHex === hash;
+    } catch {
       return false;
     }
   }

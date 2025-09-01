@@ -4,6 +4,7 @@ import { seedPermissions } from './0001-seed-permissions';
 import { seedDevUsers } from './0002-seed-dev-users';
 import { seedRolesAndAttach } from './0003-seed-roles-and-attach';
 import { seedSampleHotelAndMembers } from './0004-seed-sample-hotel-and-members';
+import { seedUserRoles } from './0005-seed-user-roles';
 
 async function runSeeders() {
   try {
@@ -25,6 +26,9 @@ async function runSeeders() {
     
     console.log('🏨 Seeding sample hotel dan members...');
     await seedSampleHotelAndMembers();
+    
+    console.log('👥 Assigning roles to users...');
+    await seedUserRoles();
 
     console.log('🎉 Database seeding berhasil!');
   } catch (error) {

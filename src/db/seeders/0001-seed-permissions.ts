@@ -4,16 +4,21 @@ export async function seedPermissions() {
   const queryRunner = AppDataSource.createQueryRunner();
   
   const permissions = [
-    { name: 'users:read', guard_name: 'api', resource: 'users', action: 'read' },
-    { name: 'users:write', guard_name: 'api', resource: 'users', action: 'write' },
-    { name: 'hotels:read', guard_name: 'api', resource: 'hotels', action: 'read' },
-    { name: 'hotels:write', guard_name: 'api', resource: 'hotels', action: 'write' },
-    { name: 'roles:manage', guard_name: 'api', resource: 'roles', action: 'manage' },
-    { name: 'permissions:manage', guard_name: 'api', resource: 'permissions', action: 'manage' },
+    { name: 'read:users', guard_name: 'api', resource: 'users', action: 'read' },
+    { name: 'write:users', guard_name: 'api', resource: 'users', action: 'write' },
+    { name: 'read:hotels', guard_name: 'api', resource: 'hotels', action: 'read' },
+    { name: 'write:hotels', guard_name: 'api', resource: 'hotels', action: 'write' },
+    { name: 'manage:roles', guard_name: 'api', resource: 'roles', action: 'manage' },
+    { name: 'manage:permissions', guard_name: 'api', resource: 'permissions', action: 'manage' },
+    { name: 'read:settings', guard_name: 'api', resource: 'settings', action: 'read' },
+    { name: 'write:actions', guard_name: 'api', resource: 'actions', action: 'write' },
   ];
 
   try {
-    // Clear existing permissions
+    // Clear existing data in proper order to avoid FK constraints
+    console.log('🧹 Clearing existing permission data...');
+    await queryRunner.query('DELETE FROM role_has_permissions');
+    await queryRunner.query('DELETE FROM model_has_permissions'); 
     await queryRunner.query('DELETE FROM permissions');
     
     // Insert new permissions

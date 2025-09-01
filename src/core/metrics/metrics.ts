@@ -161,5 +161,8 @@ export const AuthEvents = {
   LOGIN_LOCKOUT: 'auth_login_lockout',
   TOKEN_REFRESH: 'auth_token_refresh',
   REFRESH_REUSE_DETECTED: 'auth_refresh_reuse_detected',
-  SESSION_ANOMALY: 'auth_session_anomaly'
+  SESSION_ANOMALY: 'auth_session_anomaly',
+  SESSION_CREATED: 'auth_session_created',
+  SESSION_REVOKED: 'auth_session_revoked',
+  ANOMALY_DETECTED: 'auth_anomaly_detected'
 } as const;

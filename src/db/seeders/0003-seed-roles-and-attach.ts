@@ -42,7 +42,7 @@ export async function seedRolesAndAttach() {
     }
 
     // Attach permissions ke manager
-    const managerPermissions = ['hotels:read', 'hotels:write', 'users:read'];
+    const managerPermissions = ['read:hotels', 'write:hotels', 'read:users', 'read:settings'];
     for (const permName of managerPermissions) {
       if (permissionMap[permName]) {
         await queryRunner.query(
@@ -53,7 +53,7 @@ export async function seedRolesAndAttach() {
     }
 
     // Attach permissions ke user
-    const userPermissions = ['hotels:read'];
+    const userPermissions = ['read:hotels'];
     for (const permName of userPermissions) {
       if (permissionMap[permName]) {
         await queryRunner.query(

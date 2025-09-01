@@ -30,7 +30,7 @@ export class RbacGuardService {
       return true;
     }
 
-    const requiredPermission = `${action}:${resource}`;
+    const requiredPermission = `${resource}:${action}`;
 
     // Check exact, wildcard action, atau wildcard resource
     return permissions.includes(requiredPermission) ||
