@@ -17,4 +17,5 @@ export interface UserRepository extends BaseRepository<User, UserFilter> {
   ): Promise<Page<User>>;
   attachToHotel(userId: bigint, hotelId: bigint, role?: RoleSlug): Promise<void>;
   detachFromHotel(userId: bigint, hotelId: bigint): Promise<void>;
+  assignRoleBySlug(userId: bigint, roleSlug: string, hotelId?: bigint): Promise<void>;
 }
