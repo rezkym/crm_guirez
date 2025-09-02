@@ -16,6 +16,9 @@ import { TokenStoreTypeORM } from '../data/typeorm/token.store.typeorm';
 import { UserCredentialsRepoTypeORM } from '../repositories/typeorm/user.credentials.repository.typeorm';
 import AppDataSource from '../data/typeorm-data-source';
 import { AuthService } from '../services/auth.service';
+import { UsersService } from '../services/users.service';
+import { UserRepositoryTypeORM } from '../repositories/typeorm/user.repository.typeorm';
+import { UserRepository } from '../repositories/user.repository';
 import { TokenService } from '../services/token.service';
 
 export interface AppDependencies {
@@ -23,6 +26,8 @@ export interface AppDependencies {
   passwordService: PasswordService;
   rateLimitService: RateLimitService;
   dataSource?: DataSource;
+  usersService?: UsersService;
+  userRepository?: UserRepository;
 }
 
 let dependencies: AppDependencies | null = null;
@@ -46,6 +51,8 @@ export async function initializeDependencies(): Promise<AppDependencies> {
   let tokenStore;
   let userCredentialsRepo;
   let dataSource: DataSource | undefined;
+  let userRepository: UserRepository | undefined;
+  let usersService: UsersService | undefined;
 
   if (dataBackend === 'db') {
     // Initialize TypeORM DataSource
@@ -60,6 +67,8 @@ export async function initializeDependencies(): Promise<AppDependencies> {
     sessionStore = new SessionStoreTypeORM(dataSource);
     tokenStore = new TokenStoreTypeORM(dataSource);
     userCredentialsRepo = new UserCredentialsRepoTypeORM(dataSource);
+    userRepository = new UserRepositoryTypeORM(dataSource);
+    usersService = new UsersService(userRepository, passwordService);
     
     console.log('Using TypeORM adapters for auth data');
   } else {
@@ -89,7 +98,9 @@ export async function initializeDependencies(): Promise<AppDependencies> {
     authService,
     passwordService,
     rateLimitService,
-    dataSource
+    dataSource,
+    usersService,
+    userRepository
   };
 
   // Setup cleanup interval
