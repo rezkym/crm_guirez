@@ -1,8 +1,8 @@
-import express from 'express';
-import { rootRouter } from './router';
-import { requestId, notFoundHandler } from './core/middleware';
-import { errorHandler } from './core/http';
-import { appConfig } from './config';
+import express from "express";
+import { rootRouter } from "./router";
+import { requestId, notFoundHandler } from "./core/middleware";
+import { errorHandler } from "./core/http";
+import { appConfig } from "./config";
 
 const app: express.Application = express();
 

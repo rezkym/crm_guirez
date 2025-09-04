@@ -3,6 +3,7 @@ import { asyncHandler } from '../../core/http';
 import { healthController, healthV1 } from '../../controllers';
 import { createAuthRouter } from './auth.router';
 import { createMeRouter } from './me.router';
+import { createUsersRouter } from './users.router';
 import { getDependencies } from '../../config/dependencies';
 
 const v1Router: Router = Router();
@@ -13,13 +14,18 @@ v1Router.get('/health', healthV1);
 // Setup auth routes - akan dipanggil dari app.ts setelah dependencies ready
 export const setupAuthRoutes = () => {
   try {
-    const { authService } = getDependencies();
+    const { authService, usersService } = getDependencies();
     
     // Auth routes
     v1Router.use('/auth', createAuthRouter(authService));
     
     // Protected example routes
     v1Router.use('/me', createMeRouter(authService));
+
+    // Users CRUD (protected)
+    if (usersService) {
+      v1Router.use('/users', createUsersRouter(usersService, authService));
+    }
     
     console.log('Auth routes setup successfully');
   } catch (error) {
