@@ -1,0 +1,399 @@
+{
+  "info": {
+    "_postman_id": "f3f0d6c7-2b2f-4a3a-9cf0-6a7c8d12b0ab",
+    "name": "CRM MindiMedia API (v1) - Complete Collection",
+    "description": "Complete API Collection for CRM MindiMedia System\n\n## 🚀 Features\n- **Authentication**: JWT-based with access & refresh tokens\n- **RBAC**: Role-Based Access Control with permissions\n- **Token Security**: Token rotation & reuse detection\n- **Session Management**: User agent & IP tracking\n\n## 📋 Test Users\n| Email | Password | Role | Permissions |\n|-------|----------|------|-------------|\n| admin@example.com | admin123 | superadmin | All permissions |\n| manager@example.com | manager123 | manager | read:users, read:hotels, write:hotels, read:settings |\n| user@example.com | user123 | user | read:hotels |\n\n## 🔑 Token Format\n- Access Token: `at_` prefix\n- Refresh Token: `rt_` prefix\n\n## 📊 Response Format\n```json\n{\n  \"data\": {},\n  \"meta\": {\n    \"requestId\": \"uuid\"\n  }\n}\n```\n\n## ⚠️ Error Format\n```json\n{\n  \"error\": \"Error message\",\n  \"meta\": {\n    \"requestId\": \"uuid\"\n  }\n}\n```\n\nBase URL: {{base_url}} | API Prefix: /api | Version: /v1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{access_token}}", "type": "string" }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Ensure base_url exists",
+          "if (!pm.collectionVariables.get('base_url') && !pm.environment.get('base_url')) {",
+          "  pm.collectionVariables.set('base_url', 'http://localhost:3000');",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": { "type": "text/javascript", "exec": [ "" ] }
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000" },
+    { "key": "access_token", "value": "", "description": "JWT access token dari login" },
+    { "key": "refresh_token", "value": "", "description": "Refresh token dari login/refresh" }
+  ],
+  "item": [
+    {
+      "name": "🏠 Base",
+      "item": [
+        {
+          "name": "Health (Legacy)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/health",
+              "host": ["{{base_url}}"],
+              "path": ["api", "health"]
+            },
+            "description": "Cek status aplikasi pada endpoint legacy /api/health"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {"raw":"{{base_url}}/api/health","host":["{{base_url}}"],"path":["api","health"]}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [ {"key":"Content-Type","value":"application/json"} ],
+              "body": "{\n  \"data\": {\n    \"status\": \"ok\",\n    \"timestamp\": \"2024-01-01T00:00:00.000Z\"\n  },\n  \"meta\": { \"requestId\": \"req-id\" }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Health (v1)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/health",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "health"]
+            },
+            "description": "Cek status aplikasi versi v1"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {"raw":"{{base_url}}/api/v1/health","host":["{{base_url}}"],"path":["api","v1","health"]}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [ {"key":"Content-Type","value":"application/json"} ],
+              "body": "{\n  \"data\": {\n    \"status\": \"ok\",\n    \"version\": \"v1\"\n  },\n  \"meta\": { \"requestId\": \"req-id\" }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [ {"key":"Content-Type","value":"application/json"} ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","auth","login"]
+            },
+            "description": "POST /api/v1/auth/login — kembalikan accessToken & refreshToken"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "const at = json && json.data && json.data.tokens && json.data.tokens.accessToken;",
+                  "const rt = json && json.data && json.data.tokens && json.data.tokens.refreshToken;",
+                  "if (at) { pm.environment.set('access_token', at); pm.collectionVariables.set('access_token', at); }",
+                  "if (rt) { pm.environment.set('refresh_token', rt); pm.collectionVariables.set('refresh_token', rt); }"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [ {"key":"Content-Type","value":"application/json"} ],
+                "url": {"raw":"{{base_url}}/api/v1/auth/login","host":["{{base_url}}"],"path":["api","v1","auth","login"]}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [ {"key":"Content-Type","value":"application/json"} ],
+              "body": "{\n  \"data\": {\n    \"user\": {\n      \"id\": \"user-123\",\n      \"email\": \"admin@example.com\",\n      \"status\": \"active\",\n      \"roles\": [\"admin\"]\n    },\n    \"tokens\": {\n      \"accessToken\": \"at_...\",\n      \"refreshToken\": \"rt_...\",\n      \"accessExpiresAt\": \"2024-01-01T01:00:00.000Z\",\n      \"refreshExpiresAt\": \"2024-02-01T00:00:00.000Z\"\n    }\n  },\n  \"meta\": { \"requestId\": \"req-id\" }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Refresh",
+          "request": {
+            "method": "POST",
+            "header": [ {"key":"Content-Type","value":"application/json"} ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","auth","refresh"]
+            },
+            "description": "POST /api/v1/auth/refresh — kembalikan accessToken baru dan kadang refreshToken baru"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200 or 401', function () { pm.expect([200,401]).to.include(pm.response.code); });",
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  const at = json && json.data && json.data.accessToken;",
+                  "  const rt = json && json.data && json.data.refreshToken;",
+                  "  if (at) { pm.environment.set('access_token', at); pm.collectionVariables.set('access_token', at); }",
+                  "  if (rt) { pm.environment.set('refresh_token', rt); pm.collectionVariables.set('refresh_token', rt); }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [ {"key":"Content-Type","value":"application/json"} ],
+                "url": {"raw":"{{base_url}}/api/v1/auth/refresh","host":["{{base_url}}"],"path":["api","v1","auth","refresh"]}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [ {"key":"Content-Type","value":"application/json"} ],
+              "body": "{\n  \"data\": {\n    \"accessToken\": \"at_new...\",\n    \"accessExpiresAt\": \"2024-01-01T02:00:00.000Z\",\n    \"refreshToken\": \"rt_new...\",\n    \"refreshExpiresAt\": \"2024-02-01T00:00:00.000Z\"\n  },\n  \"meta\": { \"requestId\": \"req-id\" }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Me (Auth Service)",
+          "request": {
+            "method": "GET",
+            "header": [ {"key":"Authorization","value":"Bearer {{access_token}}"} ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","auth","me"]
+            },
+            "description": "GET /api/v1/auth/me — informasi user berdasarkan access token"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [ {"key":"Authorization","value":"Bearer {{access_token}}"} ],
+                "url": {"raw":"{{base_url}}/api/v1/auth/me","host":["{{base_url}}"],"path":["api","v1","auth","me"]}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [ {"key":"Content-Type","value":"application/json"} ],
+              "body": "{\n  \"data\": {\n    \"user\": {\n      \"id\": \"user-123\",\n      \"email\": \"admin@example.com\",\n      \"status\": \"active\"\n    },\n    \"roles\": [\"admin\"],\n    \"permissions\": [\"*\"]\n  },\n  \"meta\": { \"requestId\": \"req-id\" }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [ {"key":"Authorization","value":"Bearer {{access_token}}"} ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","auth","logout"]
+            },
+            "description": "POST /api/v1/auth/logout — revoke sesi/token"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.environment.unset('access_token'); pm.environment.unset('refresh_token');",
+                  "pm.collectionVariables.unset('access_token'); pm.collectionVariables.unset('refresh_token');"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [ {"key":"Authorization","value":"Bearer {{access_token}}"} ],
+                "url": {"raw":"{{base_url}}/api/v1/auth/logout","host":["{{base_url}}"],"path":["api","v1","auth","logout"]}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [ {"key":"Content-Type","value":"application/json"} ],
+              "body": "{\n  \"data\": null,\n  \"meta\": { \"requestId\": \"req-id\" }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🙋 Me (Protected)",
+      "item": [
+        {
+          "name": "Profile",
+          "request": {
+            "method": "GET",
+            "header": [ {"key":"Authorization","value":"Bearer {{access_token}}"} ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/me/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","me","profile"]
+            },
+            "description": "GET /api/v1/me/profile — profil dasar dari auth context"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {"method":"GET","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}],"url":{"raw":"{{base_url}}/api/v1/me/profile","host":["{{base_url}}"],"path":["api","v1","me","profile"]}},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [ {"key":"Content-Type","value":"application/json"} ],
+              "body": "{\n  \"data\": {\n    \"userId\": \"user-123\",\n    \"sessionId\": \"sess-abc\",\n    \"roles\": [\"admin\"],\n    \"permissions\": [\"*\"]\n  },\n  \"meta\": { \"requestId\": \"req-id\" }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Admin (role: admin|manager)",
+          "request": {
+            "method": "GET",
+            "header": [ {"key":"Authorization","value":"Bearer {{access_token}}"} ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/me/admin",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","me","admin"]
+            },
+            "description": "GET /api/v1/me/admin — hanya untuk role admin/manager"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {"method":"GET","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}],"url":{"raw":"{{base_url}}/api/v1/me/admin","host":["{{base_url}}"],"path":["api","v1","me","admin"]}},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [ {"key":"Content-Type","value":"application/json"} ],
+              "body": "{\n  \"data\": {\n    \"message\": \"This is admin-only data\",\n    \"userId\": \"user-123\"\n  },\n  \"meta\": { \"requestId\": \"req-id\" }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Settings (perm: settings:read)",
+          "request": {
+            "method": "GET",
+            "header": [ {"key":"Authorization","value":"Bearer {{access_token}}"} ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/me/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","me","settings"]
+            },
+            "description": "GET /api/v1/me/settings — membutuhkan permission settings:read"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {"method":"GET","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}],"url":{"raw":"{{base_url}}/api/v1/me/settings","host":["{{base_url}}"],"path":["api","v1","me","settings"]}},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [ {"key":"Content-Type","value":"application/json"} ],
+              "body": "{\n  \"data\": {\n    \"message\": \"User settings data\"\n  },\n  \"meta\": { \"requestId\": \"req-id\" }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Action (role manager OR perm write:actions)",
+          "request": {
+            "method": "POST",
+            "header": [ {"key":"Authorization","value":"Bearer {{access_token}}"}, {"key":"Content-Type","value":"application/json"} ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": {
+              "raw": "{{base_url}}/api/v1/me/action",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","me","action"]
+            },
+            "description": "POST /api/v1/me/action — manager ATAU write:actions"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {"method":"POST","header":[{"key":"Authorization","value":"Bearer {{access_token}}"},{"key":"Content-Type","value":"application/json"}],"url":{"raw":"{{base_url}}/api/v1/me/action","host":["{{base_url}}"],"path":["api","v1","me","action"]}},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [ {"key":"Content-Type","value":"application/json"} ],
+              "body": "{\n  \"data\": {\n    \"message\": \"Action executed successfully\",\n    \"executedBy\": \"user-123\"\n  },\n  \"meta\": { \"requestId\": \"req-id\" }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Superadmin (role: superadmin)",
+          "request": {
+            "method": "GET",
+            "header": [ {"key":"Authorization","value":"Bearer {{access_token}}"} ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/me/superadmin",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","me","superadmin"]
+            },
+            "description": "GET /api/v1/me/superadmin — hanya untuk superadmin"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {"method":"GET","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}],"url":{"raw":"{{base_url}}/api/v1/me/superadmin","host":["{{base_url}}"],"path":["api","v1","me","superadmin"]}},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [ {"key":"Content-Type","value":"application/json"} ],
+              "body": "{\n  \"data\": {\n    \"message\": \"Welcome, superadmin!\",\n    \"systemInfo\": { \"timestamp\": \"2024-01-01T00:00:00.000Z\", \"environment\": \"development\" }\n  },\n  \"meta\": { \"requestId\": \"req-id\" }\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,733 @@
+{
+	"info": {
+		"_postman_id": "454a3c43-51e8-4158-a773-7dd9702367e5",
+		"name": "Hotel Management API - Complete Collection",
+		"description": "Koleksi lengkap API untuk sistem manajemen hotel dengan fitur authentication, RBAC, user management, dan hotel management. Base URL: http://localhost:3000/api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "47485944"
+	},
+	"item": [
+		{
+			"name": "🏠 Base Routes",
+			"item": [
+				{
+					"name": "API Info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api",
+							"host": ["{{base_url}}"],
+							"path": ["api"]
+						},
+						"description": "Mendapatkan informasi API version dan daftar endpoint yang tersedia"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api",
+									"host": ["{{base_url}}"],
+									"path": ["api"]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"message\": \"Hotel Management API\",\n  \"version\": \"1.0.0\",\n  \"env\": \"development\",\n  \"endpoints\": {\n    \"health\": \"/health\",\n    \"auth\": \"/auth\",\n    \"users\": \"/users\",\n    \"hotels\": \"/hotels\",\n    \"rbac\": \"/rbac\"\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/health",
+							"host": ["{{base_url}}"],
+							"path": ["api", "health"]
+						},
+						"description": "Endpoint untuk mengecek status kesehatan aplikasi"
+					},
+					"response": [
+						{
+							"name": "Healthy Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/health",
+									"host": ["{{base_url}}"],
+									"path": ["api", "health"]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"status\": \"ok\",\n  \"env\": \"development\",\n  \"timestamp\": \"2024-01-15T10:30:00.000Z\",\n  \"uptime\": 3600\n}"
+						}
+					]
+				}
+			],
+			"description": "Endpoint dasar untuk informasi API dan health check"
+		},
+		{
+			"name": "🔐 Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "login"]
+						},
+						"description": "Login user dengan email dan password"
+					},
+					"response": [
+						{
+							"name": "Login Success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/auth/login",
+									"host": ["{{base_url}}"],
+									"path": ["api", "auth", "login"]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"user-123\",\n      \"email\": \"admin@example.com\",\n      \"name\": \"Admin User\",\n      \"isActive\": true\n    },\n    \"tokens\": {\n      \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n      \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n      \"expiresIn\": 3600\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"confirmPassword\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "register"]
+						},
+						"description": "Registrasi user baru"
+					},
+					"response": [
+						{
+							"name": "Register Success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"confirmPassword\": \"password123\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/auth/register",
+									"host": ["{{base_url}}"],
+									"path": ["api", "auth", "register"]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"message\": \"User registered successfully\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"user-456\",\n      \"name\": \"John Doe\",\n      \"email\": \"john@example.com\",\n      \"isActive\": true,\n      \"createdAt\": \"2024-01-15T10:30:00.000Z\"\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/logout",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "logout"]
+						},
+						"description": "Logout user dan invalidate token"
+					},
+					"response": [
+						{
+							"name": "Logout Success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/auth/logout",
+									"host": ["{{base_url}}"],
+									"path": ["api", "auth", "logout"]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Logout successful\"\n}"
+						}
+					]
+				}
+			],
+			"description": "Endpoint untuk authentication dan authorization"
+		},
+		{
+			"name": "👥 Users Management",
+			"item": [
+				{
+					"name": "Get Current User",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"description": "JWT access token untuk authentication"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/users/me",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users", "me"]
+						},
+						"description": "Mendapatkan data user yang sedang login"
+					},
+					"response": [
+						{
+							"name": "Get Current User Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/users/me",
+									"host": ["{{base_url}}"],
+									"path": ["api", "users", "me"]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Current user retrieved successfully\",\n  \"data\": {\n    \"id\": \"user-123\",\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"isActive\": true,\n    \"createdAt\": \"2024-01-01T00:00:00.000Z\",\n    \"updatedAt\": \"2024-01-15T10:30:00.000Z\"\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Update Current User",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"description": "JWT access token untuk authentication"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe Updated\",\n  \"email\": \"john.updated@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/users/me",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users", "me"]
+						},
+						"description": "Update data user yang sedang login"
+					},
+					"response": [
+						{
+							"name": "Update Current User Success",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"John Doe Updated\",\n  \"email\": \"john.updated@example.com\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/users/me",
+									"host": ["{{base_url}}"],
+									"path": ["api", "users", "me"]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"message\": \"User updated successfully\",\n  \"data\": {\n    \"id\": \"user-123\",\n    \"name\": \"John Doe Updated\",\n    \"email\": \"john.updated@example.com\",\n    \"isActive\": true,\n    \"updatedAt\": \"2024-01-15T10:30:00.000Z\"\n  }\n}"
+						}
+					]
+				}
+			],
+			"description": "Endpoint untuk manajemen user yang sedang login"
+		},
+		{
+			"name": "🏨 Hotels Management",
+			"item": [
+				{
+					"name": "Get All Hotels",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"description": "JWT access token untuk authentication"
+							},
+							{
+								"key": "x-tenant-id",
+								"value": "{{tenant_id}}",
+								"description": "Tenant ID untuk multi-tenancy"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/hotels?page=1&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "hotels"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Nomor halaman untuk pagination"
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Jumlah data per halaman"
+								}
+							]
+						},
+						"description": "Mendapatkan daftar semua hotel dengan pagination"
+					},
+					"response": [
+						{
+							"name": "Get All Hotels Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									},
+									{
+										"key": "x-tenant-id",
+										"value": "{{tenant_id}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/hotels?page=1&limit=10",
+									"host": ["{{base_url}}"],
+									"path": ["api", "hotels"]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Hotels retrieved successfully\",\n  \"data\": {\n    \"hotels\": [\n      {\n        \"id\": \"hotel-123\",\n        \"name\": \"Grand Hotel\",\n        \"address\": \"123 Main Street\",\n        \"city\": \"Jakarta\",\n        \"country\": \"Indonesia\",\n        \"rating\": 5,\n        \"amenities\": [\"WiFi\", \"Pool\", \"Spa\"],\n        \"isActive\": true,\n        \"createdAt\": \"2024-01-01T00:00:00.000Z\"\n      }\n    ],\n    \"pagination\": {\n      \"page\": 1,\n      \"limit\": 10,\n      \"total\": 25,\n      \"totalPages\": 3\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Create Hotel",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"description": "JWT access token untuk authentication"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-tenant-id",
+								"value": "{{tenant_id}}",
+								"description": "Tenant ID untuk multi-tenancy"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"New Grand Hotel\",\n  \"address\": \"456 New Street\",\n  \"city\": \"Bandung\",\n  \"country\": \"Indonesia\",\n  \"rating\": 4,\n  \"amenities\": [\"WiFi\", \"Restaurant\", \"Gym\"],\n  \"description\": \"A beautiful hotel in the heart of Bandung\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/hotels",
+							"host": ["{{base_url}}"],
+							"path": ["api", "hotels"]
+						},
+						"description": "Membuat hotel baru (Admin only)"
+					},
+					"response": [
+						{
+							"name": "Create Hotel Success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "x-tenant-id",
+										"value": "{{tenant_id}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"New Grand Hotel\",\n  \"address\": \"456 New Street\",\n  \"city\": \"Bandung\",\n  \"country\": \"Indonesia\",\n  \"rating\": 4,\n  \"amenities\": [\"WiFi\", \"Restaurant\", \"Gym\"],\n  \"description\": \"A beautiful hotel in the heart of Bandung\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/hotels",
+									"host": ["{{base_url}}"],
+									"path": ["api", "hotels"]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Hotel created successfully\",\n  \"data\": {\n    \"id\": \"hotel-456\",\n    \"name\": \"New Grand Hotel\",\n    \"address\": \"456 New Street\",\n    \"city\": \"Bandung\",\n    \"country\": \"Indonesia\",\n    \"rating\": 4,\n    \"amenities\": [\"WiFi\", \"Restaurant\", \"Gym\"],\n    \"description\": \"A beautiful hotel in the heart of Bandung\",\n    \"isActive\": true,\n    \"createdAt\": \"2024-01-15T10:30:00.000Z\"\n  }\n}"
+						}
+					]
+				}
+			],
+			"description": "Endpoint untuk manajemen hotel"
+		},
+		{
+			"name": "🔐 RBAC Management",
+			"item": [
+				{
+					"name": "Get All Roles",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"description": "JWT access token untuk authentication"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/rbac/roles",
+							"host": ["{{base_url}}"],
+							"path": ["api", "rbac", "roles"]
+						},
+						"description": "Mendapatkan daftar semua roles (Admin only)"
+					},
+					"response": [
+						{
+							"name": "Get All Roles Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/rbac/roles",
+									"host": ["{{base_url}}"],
+									"path": ["api", "rbac", "roles"]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Roles retrieved successfully\",\n  \"data\": [\n    {\n      \"id\": \"role-1\",\n      \"name\": \"admin\",\n      \"description\": \"Administrator role with full access\",\n      \"permissions\": [\"create\", \"read\", \"update\", \"delete\"],\n      \"isActive\": true\n    },\n    {\n      \"id\": \"role-2\",\n      \"name\": \"user\",\n      \"description\": \"Regular user role\",\n      \"permissions\": [\"read\"],\n      \"isActive\": true\n    }\n  ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Create Role",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"description": "JWT access token untuk authentication"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"manager\",\n  \"description\": \"Hotel manager role\",\n  \"permissions\": [\"read\", \"update\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/rbac/roles",
+							"host": ["{{base_url}}"],
+							"path": ["api", "rbac", "roles"]
+						},
+						"description": "Membuat role baru (Admin only)"
+					},
+					"response": [
+						{
+							"name": "Create Role Success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"manager\",\n  \"description\": \"Hotel manager role\",\n  \"permissions\": [\"read\", \"update\"]\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/rbac/roles",
+									"host": ["{{base_url}}"],
+									"path": ["api", "rbac", "roles"]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Role created successfully\",\n  \"data\": {\n    \"id\": \"role-3\",\n    \"name\": \"manager\",\n    \"description\": \"Hotel manager role\",\n    \"permissions\": [\"read\", \"update\"],\n    \"isActive\": true,\n    \"createdAt\": \"2024-01-15T10:30:00.000Z\"\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Assign Role to User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"description": "JWT access token untuk authentication"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"user-123\",\n  \"roleId\": \"role-2\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/rbac/assign-role",
+							"host": ["{{base_url}}"],
+							"path": ["api", "rbac", "assign-role"]
+						},
+						"description": "Assign role ke user (Admin only)"
+					},
+					"response": [
+						{
+							"name": "Assign Role Success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"userId\": \"user-123\",\n  \"roleId\": \"role-2\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/rbac/assign-role",
+									"host": ["{{base_url}}"],
+									"path": ["api", "rbac", "assign-role"]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Role assigned successfully\",\n  \"data\": {\n    \"userId\": \"user-123\",\n    \"roleId\": \"role-2\",\n    \"roleName\": \"user\",\n    \"assignedAt\": \"2024-01-15T10:30:00.000Z\"\n  }\n}"
+						}
+					]
+				}
+			],
+			"description": "Endpoint untuk manajemen Role-Based Access Control"
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string",
+			"description": "JWT access token yang didapat dari login"
+		},
+		{
+			"key": "tenant_id",
+			"value": "default-tenant",
+			"type": "string",
+			"description": "Tenant ID untuk multi-tenancy support"
+		}
+	]
+}
