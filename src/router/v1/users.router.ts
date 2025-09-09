@@ -12,14 +12,14 @@ export function createUsersRouter(usersService: UsersService, authService: any):
   router.use(requireAuth(authService));
 
   // Read users: require permission read:users
-  router.get('/', hasPermission('users', 'read'), asyncHandler(controller.list));
-  router.get('/:id', hasPermission('users', 'read'), asyncHandler(controller.get));
+  router.get('/', hasPermission('users', 'read'), asyncHandler(controller.list.bind(controller)));
+  router.get('/:id', hasPermission('users', 'read'), asyncHandler(controller.get.bind(controller)));
 
   // Create/Update/Delete users: require permission write:users
-  router.post('/', hasPermission('users', 'write'), asyncHandler(controller.create));
-  router.put('/:id', hasPermission('users', 'write'), asyncHandler(controller.update));
-  router.patch('/:id', hasPermission('users', 'write'), asyncHandler(controller.update));
-  router.delete('/:id', hasPermission('users', 'write'), asyncHandler(controller.remove));
+  router.post('/', hasPermission('users', 'write'), asyncHandler(controller.create.bind(controller)));
+  router.put('/:id', hasPermission('users', 'write'), asyncHandler(controller.update.bind(controller)));
+  router.patch('/:id', hasPermission('users', 'write'), asyncHandler(controller.update.bind(controller)));
+  router.delete('/:id', hasPermission('users', 'write'), asyncHandler(controller.remove.bind(controller)));
 
   return router;
 }

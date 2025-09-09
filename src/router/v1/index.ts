@@ -14,7 +14,11 @@ v1Router.get('/health', healthV1);
 // Setup auth routes - akan dipanggil dari app.ts setelah dependencies ready
 export const setupAuthRoutes = () => {
   try {
-    const { authService, usersService } = getDependencies();
+    const dependencies = getDependencies();
+    console.log('Dependencies:', Object.keys(dependencies));
+    console.log('usersService available:', !!dependencies.usersService);
+    
+    const { authService, usersService } = dependencies;
     
     // Auth routes
     v1Router.use('/auth', createAuthRouter(authService));
@@ -24,7 +28,10 @@ export const setupAuthRoutes = () => {
 
     // Users CRUD (protected)
     if (usersService) {
+      console.log('Setting up users routes with usersService');
       v1Router.use('/users', createUsersRouter(usersService, authService));
+    } else {
+      console.log('usersService not available, skipping users routes');
     }
     
     console.log('Auth routes setup successfully');

@@ -9,7 +9,11 @@ import { toUserDTO, toUserPageDTO } from './serializers/user.serializer';
  * Delegates business logic to UsersService
  */
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) {
+    console.log('UsersController constructor called');
+    console.log('usersService in constructor:', !!usersService);
+    console.log('this.usersService in constructor:', !!this.usersService);
+  }
 
   /**
    * List users with pagination and filtering
@@ -17,14 +21,19 @@ export class UsersController {
    */
   async list(req: Request, res: Response): Promise<void> {
     try {
+      console.log('UsersController.list called');
+      console.log('usersService:', !!this.usersService);
+      
       const page = parseInt((req.query.page as string) || '1', 10);
       const pageSize = parseInt((req.query.pageSize as string) || '20', 10);
       const q = (req.query.q as string) || undefined;
       const status = (req.query.status as any) || undefined;
 
+      console.log('About to call usersService.list with:', { page, pageSize, q, status });
       const result = await this.usersService.list({ page, pageSize, q, status });
       res.status(HTTP_STATUS.OK).json(createSuccessResponse(toUserPageDTO(result), req.id));
     } catch (error) {
+      console.error('Error in UsersController.list:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to list users';
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(createErrorResponse(errorMessage, req.id));
     }
@@ -147,5 +156,9 @@ export class UsersController {
  * Factory function to create users controller
  */
 export function createUsersController(service: UsersService): UsersController {
-  return new UsersController(service);
+  console.log('createUsersController called with service:', !!service);
+  console.log('service type:', typeof service);
+  const controller = new UsersController(service);
+  console.log('controller created, usersService available:', !!controller['usersService']);
+  return controller;
 }
