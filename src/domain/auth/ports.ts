@@ -98,6 +98,11 @@ export interface UserCredentialsRepository {
    * Update last login time
    */
   updateLastLogin(userId: string): Promise<void>;
+
+  /**
+   * Update password hash (untuk password migration)
+   */
+  updatePassword(userId: string, passwordHash: string, passwordSalt: string): Promise<void>;
 }
 
 export interface RateLimitStore {

@@ -91,14 +91,10 @@ export class AuthService {
         throw new Error('Account is not active');
       }
 
-      // 4. Verify password
-      const isPasswordValid = await this.passwordService.verifyPassword(
-        password,
-        user.passwordHash,
-        user.passwordSalt
-      );
+      // 4. Verify password dengan bcrypt
+      const isValid = await this.passwordService.verifyPassword(password, user.passwordHash);
 
-      if (!isPasswordValid) {
+      if (!isValid) {
         throw new Error('Invalid credentials');
       }
 

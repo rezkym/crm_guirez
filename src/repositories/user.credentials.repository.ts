@@ -120,6 +120,15 @@ export class MemoryUserCredentialsRepository implements UserCredentialsRepositor
     return true;
   }
 
+  async updatePassword(userId: string, passwordHash: string, passwordSalt: string): Promise<void> {
+    const user = this.users.get(userId);
+    if (user) {
+      user.passwordHash = passwordHash;
+      user.passwordSalt = passwordSalt;
+      this.users.set(userId, user);
+    }
+  }
+
   // Debug methods
   getAllUsersForDebug(): UserCredentials[] {
     return Array.from(this.users.values());

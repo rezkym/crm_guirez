@@ -37,7 +37,7 @@ export const validateAuthConfig = () => {
     'RATE_LIMIT_WINDOW_MINUTES',
     'RATE_LIMIT_MAX_ATTEMPTS',
     'RATE_LIMIT_LOCKOUT_MINUTES',
-    'PASSWORD_PBKDF2_ITERATIONS',
+    'BCRYPT_ROUNDS',
     'AUTH_LOGOUT_STRATEGY'
   ];
 
@@ -50,7 +50,7 @@ export const validateAuthConfig = () => {
   console.log('Auth configuration loaded:', {
     authConfig,
     rateLimitConfig,
-    passwordIterations: process.env.PASSWORD_PBKDF2_ITERATIONS || '210000'
+    bcryptRounds: process.env.BCRYPT_ROUNDS || '12'
   });
 };
 

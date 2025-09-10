@@ -35,8 +35,8 @@ export class UserCredentialsRepoTypeORM implements UserCredentialsRepository {
     return {
       id: user.id.toString(),
       email: user.email,
-      passwordHash: user.passwordHash.includes(':') ? user.passwordHash.split(':')[1] : user.passwordHash,
-      passwordSalt: user.passwordHash.includes(':') ? user.passwordHash.split(':')[0] : '',
+      passwordHash: user.passwordHash,
+      passwordSalt: '',
       status: this.mapUserStatus(user.status),
       roles,
       permissions
@@ -69,8 +69,8 @@ export class UserCredentialsRepoTypeORM implements UserCredentialsRepository {
     return {
       id: user.id.toString(),
       email: user.email,
-      passwordHash: user.passwordHash.includes(':') ? user.passwordHash.split(':')[1] : user.passwordHash,
-      passwordSalt: user.passwordHash.includes(':') ? user.passwordHash.split(':')[0] : '',
+      passwordHash: user.passwordHash,
+      passwordSalt: '',
       status: this.mapUserStatus(user.status),
       roles,
       permissions
@@ -81,6 +81,17 @@ export class UserCredentialsRepoTypeORM implements UserCredentialsRepository {
     await this.dataSource.createQueryBuilder()
       .update('users')
       .set({ 
+        updated_at: () => 'CURRENT_TIMESTAMP'
+      })
+      .where('id = :userId', { userId: parseInt(userId) })
+      .execute();
+  }
+
+  async updatePassword(userId: string, passwordHash: string, passwordSalt: string): Promise<void> {
+    await this.dataSource.createQueryBuilder()
+      .update('users')
+      .set({ 
+        password: passwordHash,
         updated_at: () => 'CURRENT_TIMESTAMP'
       })
       .where('id = :userId', { userId: parseInt(userId) })

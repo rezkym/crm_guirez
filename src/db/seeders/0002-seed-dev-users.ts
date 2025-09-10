@@ -1,14 +1,13 @@
 import AppDataSource from '../../data/typeorm-data-source';
-import { pbkdf2Sync } from 'crypto';
+import * as bcrypt from 'bcrypt';
 
 function hashPassword(password: string): string {
-  const iterations = parseInt(process.env.PASSWORD_PBKDF2_ITERATIONS || '210000');
-  const salt = 'dev-salt-for-seeding'; // Static salt untuk development
-  const keyLength = 64;
-  const digest = 'sha512';
+  // Gunakan bcrypt untuk seeder development (synchronous untuk simplicity)
+  const rounds = parseInt(process.env.BCRYPT_ROUNDS || '12');
+  const hash = bcrypt.hashSync(password, rounds);
   
-  const hash = pbkdf2Sync(password, salt, iterations, keyLength, digest);
-  return `${salt}:${hash.toString('hex')}`;
+  // Return bcrypt hash langsung (no salt:hash format)
+  return hash;
 }
 
 export async function seedDevUsers() {

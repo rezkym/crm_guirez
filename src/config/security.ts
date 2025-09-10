@@ -6,10 +6,8 @@ import { PasswordConfig } from '../core/security';
 
 export const securityConfig = {
   password: {
-    iterations: parseInt(process.env.PASSWORD_PBKDF2_ITERATIONS || '210000'),
-    keyLength: 32,
-    algorithm: 'sha256',
-    saltLength: 16
+    // bcrypt configuration
+    bcryptRounds: parseInt(process.env.BCRYPT_ROUNDS || '12')
   } as PasswordConfig,
 
   session: {

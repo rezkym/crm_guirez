@@ -56,9 +56,8 @@ export class UsersService {
       throw new Error('Email already in use');
     }
 
-    // Hash password
-    const { hash, salt } = await this.passwordService.createPasswordHash(payload.password);
-    const passwordStored = `${salt}:${hash}`;
+    // Hash password menggunakan bcrypt
+    const passwordHash = await this.passwordService.createPasswordHash(payload.password);
 
     // Validate and normalize status
     const status = this.validateAndNormalizeStatus(payload.status);
@@ -67,7 +66,7 @@ export class UsersService {
     const user = await this.repo.create({
       email: payload.email,
       name: payload.name ?? '',
-      password: passwordStored,
+      password: passwordHash,
       status,
     });
 
@@ -96,8 +95,7 @@ export class UsersService {
     }
     
     if (payload.password) {
-      const { hash, salt } = await this.passwordService.createPasswordHash(payload.password);
-      updates.password = `${salt}:${hash}`;
+      updates.password = await this.passwordService.createPasswordHash(payload.password);
     }
 
     return this.repo.updateById(id, updates);
