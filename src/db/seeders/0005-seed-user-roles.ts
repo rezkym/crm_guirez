@@ -8,9 +8,8 @@ export async function seedUserRoles() {
   const queryRunner = AppDataSource.createQueryRunner();
 
   try {
-    // Clear existing user-role assignments
-    console.log('🧹 Clearing existing user-role assignments...');
-    await queryRunner.query('DELETE FROM model_has_roles WHERE model_type = ?', ['user']);
+    // Clear existing user-role assignments (model_has_roles sudah dibersihkan di user seeder)
+    console.log('ℹ️  User-role assignments sudah dibersihkan di user seeder');
     
     // Define user-role mappings based on email patterns
     const userRoleMappings = [

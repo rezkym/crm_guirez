@@ -4,10 +4,8 @@ export async function seedSampleHotelAndMembers() {
   const queryRunner = AppDataSource.createQueryRunner();
 
   try {
-    // Clear existing data
-    await queryRunner.query('DELETE FROM model_has_roles');
-    await queryRunner.query('DELETE FROM hotel_users');
-    await queryRunner.query('DELETE FROM hotels');
+    // Data sudah dibersihkan di user seeder, jadi kita skip cleanup di sini
+    console.log('ℹ️  Skipping cleanup - data sudah dibersihkan di user seeder');
 
     // Get admin user untuk ownership
     const [adminUser] = await queryRunner.query('SELECT id FROM users WHERE email = ?', ['admin@example.com']);
@@ -39,22 +37,8 @@ export async function seedSampleHotelAndMembers() {
       );
     }
 
-    // Get role IDs
-    const [managerRole] = await queryRunner.query('SELECT id FROM roles WHERE slug = ?', ['manager']);
-    const [userRole] = await queryRunner.query('SELECT id FROM roles WHERE slug = ?', ['user']);
-
-    // Assign roles ke users dalam hotel (model_has_roles)
-    const roleAssignments = [
-      { role_id: managerRole.id, hotel_id: hotel.id, model_id: managerUser.id, model_type: 'user' },
-      { role_id: userRole.id, hotel_id: hotel.id, model_id: regularUser.id, model_type: 'user' },
-    ];
-
-    for (const assignment of roleAssignments) {
-      await queryRunner.query(
-        'INSERT INTO model_has_roles (role_id, hotel_id, model_id, model_type) VALUES (?, ?, ?, ?)',
-        [assignment.role_id, assignment.hotel_id, assignment.model_id, assignment.model_type]
-      );
-    }
+    // Role assignments akan dilakukan di user-roles seeder, jadi skip di sini
+    console.log('ℹ️  Role assignments akan dilakukan di user-roles seeder');
 
     console.log(`✅ Sample hotel dan ${hotelUsers.length} members berhasil di-seed`);
   } catch (error) {

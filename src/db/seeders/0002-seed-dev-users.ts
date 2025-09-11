@@ -35,7 +35,14 @@ export async function seedDevUsers() {
   ];
 
   try {
-    // Clear existing users
+    // Clear existing data dengan urutan yang benar untuk menghindari FK constraints
+    console.log('🧹 Menghapus data yang berkaitan dengan users...');
+    await queryRunner.query('DELETE FROM model_has_roles');
+    await queryRunner.query('DELETE FROM model_has_permissions'); 
+    await queryRunner.query('DELETE FROM hotel_users');
+    await queryRunner.query('DELETE FROM hotels');
+    await queryRunner.query('DELETE FROM auth_tokens');
+    await queryRunner.query('DELETE FROM auth_sessions');
     await queryRunner.query('DELETE FROM users');
     
     // Insert new users

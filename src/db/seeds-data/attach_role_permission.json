@@ -1,0 +1,57 @@
+{
+  "role_permissions": {
+    "superadmin": [
+      "read:users",
+      "write:users",
+      "read:hotels",
+      "write:hotels",
+      "manage:roles",
+      "manage:permissions",
+      "read:settings",
+      "write:settings",
+      "write:actions",
+      "read:reports",
+      "write:reports"
+    ],
+    "manager": [
+      "read:hotels",
+      "write:hotels",
+      "read:users",
+      "read:settings",
+      "read:reports"
+    ],
+    "user": [
+      "read:hotels"
+    ],
+    "assessor": [
+      "read:hotels",
+      "read:users",
+      "read:reports",
+      "write:reports"
+    ],
+    "marketing": [
+      "read:hotels",
+      "read:users",
+      "read:reports",
+      "write:actions"
+    ],
+    "owner": [
+      "read:hotels",
+      "write:hotels",
+      "read:users",
+      "write:users",
+      "read:settings",
+      "write:settings",
+      "read:reports",
+      "write:reports"
+    ],
+    "admin": [
+      "read:hotels",
+      "write:hotels",
+      "read:users",
+      "write:users",
+      "read:settings",
+      "read:reports"
+    ]
+  }
+}

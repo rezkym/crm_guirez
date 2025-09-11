@@ -1,0 +1,81 @@
+{
+  "permissions": [
+    {
+      "name": "read:users",
+      "guard_name": "api",
+      "resource": "users",
+      "action": "read",
+      "description": "Izin membaca data pengguna"
+    },
+    {
+      "name": "write:users",
+      "guard_name": "api",
+      "resource": "users",
+      "action": "write",
+      "description": "Izin menulis/mengubah data pengguna"
+    },
+    {
+      "name": "read:hotels",
+      "guard_name": "api",
+      "resource": "hotels",
+      "action": "read",
+      "description": "Izin membaca data hotel"
+    },
+    {
+      "name": "write:hotels",
+      "guard_name": "api",
+      "resource": "hotels",
+      "action": "write",
+      "description": "Izin menulis/mengubah data hotel"
+    },
+    {
+      "name": "manage:roles",
+      "guard_name": "api",
+      "resource": "roles",
+      "action": "manage",
+      "description": "Izin mengelola roles"
+    },
+    {
+      "name": "manage:permissions",
+      "guard_name": "api",
+      "resource": "permissions",
+      "action": "manage",
+      "description": "Izin mengelola permissions"
+    },
+    {
+      "name": "read:settings",
+      "guard_name": "api",
+      "resource": "settings",
+      "action": "read",
+      "description": "Izin membaca pengaturan sistem"
+    },
+    {
+      "name": "write:settings",
+      "guard_name": "api",
+      "resource": "settings",
+      "action": "write",
+      "description": "Izin menulis pengaturan sistem"
+    },
+    {
+      "name": "write:actions",
+      "guard_name": "api",
+      "resource": "actions",
+      "action": "write",
+      "description": "Izin melakukan tindakan sistem"
+    },
+    {
+      "name": "read:reports",
+      "guard_name": "api",
+      "resource": "reports",
+      "action": "read",
+      "description": "Izin membaca laporan"
+    },
+    {
+      "name": "write:reports",
+      "guard_name": "api",
+      "resource": "reports",
+      "action": "write",
+      "description": "Izin membuat/mengubah laporan"
+    }
+  ]
+}

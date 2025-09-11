@@ -1,0 +1,53 @@
+{
+  "roles": [
+    {
+      "name": "Super Administrator",
+      "guard_name": "api",
+      "slug": "superadmin",
+      "hotel_id": null,
+      "description": "Administrator utama dengan akses penuh ke semua fitur sistem"
+    },
+    {
+      "name": "Manager",
+      "guard_name": "api",
+      "slug": "manager",
+      "hotel_id": null,
+      "description": "Manajer dengan akses untuk mengelola hotel dan pengguna"
+    },
+    {
+      "name": "User",
+      "guard_name": "api",
+      "slug": "user",
+      "hotel_id": null,
+      "description": "Pengguna biasa dengan akses terbatas"
+    },
+    {
+      "name": "Assessor",
+      "guard_name": "api",
+      "slug": "assessor",
+      "hotel_id": null,
+      "description": "Assessor untuk melakukan penilaian"
+    },
+    {
+      "name": "Marketing",
+      "guard_name": "api",
+      "slug": "marketing",
+      "hotel_id": null,
+      "description": "Tim marketing dengan akses ke fitur pemasaran"
+    },
+    {
+      "name": "Owner",
+      "guard_name": "api",
+      "slug": "owner",
+      "hotel_id": null,
+      "description": "Pemilik hotel dengan akses penuh untuk hotel tertentu"
+    },
+    {
+      "name": "Admin",
+      "guard_name": "api",
+      "slug": "admin",
+      "hotel_id": null,
+      "description": "Admin dengan akses administratif"
+    }
+  ]
+}
