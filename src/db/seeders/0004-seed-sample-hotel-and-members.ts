@@ -7,26 +7,28 @@ export async function seedSampleHotelAndMembers() {
     // Data sudah dibersihkan di user seeder, jadi kita skip cleanup di sini
     console.log('ℹ️  Skipping cleanup - data sudah dibersihkan di user seeder');
 
-    // Get admin user untuk ownership
-    const [adminUser] = await queryRunner.query('SELECT id FROM users WHERE email = ?', ['admin@example.com']);
+    // Ambil pengguna untuk ownership dan keanggotaan
+    const [ownerUser] = await queryRunner.query('SELECT id FROM users WHERE email = ?', ['owner@example.com']);
     const [managerUser] = await queryRunner.query('SELECT id FROM users WHERE email = ?', ['manager@example.com']);
+    const [marketingUser] = await queryRunner.query('SELECT id FROM users WHERE email = ?', ['marketing@example.com']);
     const [regularUser] = await queryRunner.query('SELECT id FROM users WHERE email = ?', ['user@example.com']);
 
-    if (!adminUser || !managerUser || !regularUser) {
+    if (!ownerUser || !managerUser || !marketingUser || !regularUser) {
       throw new Error('Required users not found. Please run user seeder first.');
     }
 
     // Insert sample hotel
     await queryRunner.query(
       'INSERT INTO hotels (owner_user_id, name, status, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())',
-      [adminUser.id, 'Hotel Contoh', 'active']
+      [ownerUser.id, 'Hotel Contoh', 'active']
     );
 
     const [hotel] = await queryRunner.query('SELECT id FROM hotels WHERE name = ?', ['Hotel Contoh']);
 
     // Insert hotel_users (members)
     const hotelUsers = [
-      { hotel_id: hotel.id, user_id: managerUser.id, name: 'Manager User', status: 'active' },
+      { hotel_id: hotel.id, user_id: managerUser.id, name: 'Hotel Manager', status: 'active' },
+      { hotel_id: hotel.id, user_id: marketingUser.id, name: 'Hotel Marketing', status: 'active' },
       { hotel_id: hotel.id, user_id: regularUser.id, name: 'Regular User', status: 'active' },
     ];
 

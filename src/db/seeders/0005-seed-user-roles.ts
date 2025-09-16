@@ -13,14 +13,20 @@ export async function seedUserRoles() {
     
     // Define user-role mappings based on email patterns
     const userRoleMappings = [
+      // Internal
       { emailPattern: 'admin@example.com', roleSlug: 'superadmin' },
+      { emailPattern: 'internal.admin@example.com', roleSlug: 'admin' },
+
+      // External (hotel scoped)
+      { emailPattern: 'owner@example.com', roleSlug: 'owner' },
       { emailPattern: 'manager@example.com', roleSlug: 'manager' },
+      { emailPattern: 'marketing@example.com', roleSlug: 'marketing' },
       { emailPattern: 'user@example.com', roleSlug: 'user' },
     ];
 
     console.log('🔗 Assigning roles to users...');
     
-    // Get hotel ID yang sudah dibuat sebelumnya
+    // Get hotel ID yang sudah dibuat sebelumnya (untuk assignment eksternal)
     const hotels = await queryRunner.query('SELECT id FROM hotels WHERE name = ?', ['Hotel Contoh']);
     if (hotels.length === 0) {
       throw new Error('Hotel not found. Please run hotel seeder first.');
@@ -53,7 +59,7 @@ export async function seedUserRoles() {
       const user = users[0];
       const role = roles[0];
 
-      // Insert user-role assignment dengan hotel_id
+      // Assign role with hotel scope (schema mensyaratkan hotel_id NOT NULL)
       await queryRunner.query(
         'INSERT INTO model_has_roles (role_id, hotel_id, model_id, model_type) VALUES (?, ?, ?, ?)',
         [role.id, hotelId, user.id, 'user']
