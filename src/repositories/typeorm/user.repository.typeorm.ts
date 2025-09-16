@@ -14,6 +14,7 @@ type RawUser = {
   two_factor_recovery_codes: string | null;
   remember_token: string | null;
   status: User['status'];
+  user_scope: 'internal' | 'external';
   session: string | null;
   profile_photo_path: string | null;
   created_at: Date | string | null;
@@ -38,6 +39,7 @@ export class UserRepositoryTypeORM implements UserRepository {
         'u.two_factor_recovery_codes as two_factor_recovery_codes',
         'u.remember_token as remember_token',
         "u.status as status",
+        "u.user_scope as user_scope",
         'u.session as session',
         'u.profile_photo_path as profile_photo_path',
         'u.created_at as created_at',
@@ -58,6 +60,7 @@ export class UserRepositoryTypeORM implements UserRepository {
       two_factor_recovery_codes: row.two_factor_recovery_codes,
       remember_token: row.remember_token,
       status: row.status,
+      user_scope: row.user_scope,
       session: row.session,
       profile_photo_path: row.profile_photo_path,
       created_at: row.created_at ? new Date(row.created_at) : undefined,
@@ -154,6 +157,7 @@ export class UserRepositoryTypeORM implements UserRepository {
         name: payload.name ?? null,
         password: payload.password!,
         status: (payload.status ?? 'active') as any,
+        user_scope: (payload as any).user_scope ?? 'external',
         email_verified_at: payload.email_verified_at ?? null,
         two_factor_secret: payload.two_factor_secret ?? null,
         two_factor_recovery_codes: payload.two_factor_recovery_codes ?? null,
@@ -176,6 +180,7 @@ export class UserRepositoryTypeORM implements UserRepository {
         name: payload.name as any,
         password: payload.password as any,
         status: (payload.status as any) ?? undefined,
+        user_scope: ((payload as any).user_scope as any) ?? undefined,
         email_verified_at: (payload.email_verified_at as any) ?? undefined,
         two_factor_secret: (payload.two_factor_secret as any) ?? undefined,
         two_factor_recovery_codes: (payload.two_factor_recovery_codes as any) ?? undefined,

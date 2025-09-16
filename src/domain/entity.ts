@@ -20,6 +20,7 @@ export interface User extends TimestampFields {
   two_factor_recovery_codes?: string | null;
   remember_token?: string | null;
   status: UserStatus;
+  user_scope?: 'internal' | 'external';
   session?: string | null;
   profile_photo_path?: string | null;
 }

@@ -6,6 +6,7 @@ export type UserDTO = {
   email: string;
   name: string;
   status: User['status'];
+  user_scope?: 'internal' | 'external';
   email_verified_at?: Date | null;
   profile_photo_path?: string | null;
   created_at?: Date | null;
@@ -18,6 +19,7 @@ export function toUserDTO(u: User): UserDTO {
     email: u.email,
     name: u.name,
     status: u.status,
+    user_scope: (u as any).user_scope,
     email_verified_at: u.email_verified_at ?? null,
     profile_photo_path: u.profile_photo_path ?? null,
     created_at: (u as any).created_at ?? null,
@@ -31,4 +33,3 @@ export function toUserPageDTO(page: Page<User>): Page<UserDTO> {
     data: page.data.map(toUserDTO),
   };
 }
-

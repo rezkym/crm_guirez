@@ -84,6 +84,11 @@ export class UsersController {
       const normalizedRoleSlug = (roleSlug || role)?.toString()?.toLowerCase()?.trim();
       const normalizedHotelId = hotelId ?? hotel_id;
 
+      // Determine user scope (focus on internal first):
+      // If creator is superadmin, mark new user as 'internal', else default to 'external'
+      const isSuperadmin = Array.isArray(req.auth?.roles) && req.auth!.roles.includes('superadmin');
+      const userScope: 'internal' | 'external' = isSuperadmin ? 'internal' : 'external';
+
       const createPayload = {
         email,
         name,
@@ -91,6 +96,7 @@ export class UsersController {
         status,
         roleSlug: normalizedRoleSlug,
         hotelId: normalizedHotelId ? BigInt(normalizedHotelId) : undefined,
+        userScope,
       };
 
       const user = await this.usersService.create(createPayload);

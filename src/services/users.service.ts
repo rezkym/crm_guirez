@@ -9,6 +9,7 @@ export interface CreateUserDTO {
   status?: User['status'];
   roleSlug?: string; // default 'user'
   hotelId?: bigint;  // optional; if not provided, will fallback to first hotel if available
+  userScope?: 'internal' | 'external';
 }
 
 export interface UpdateUserDTO {
@@ -68,6 +69,7 @@ export class UsersService {
       name: payload.name ?? '',
       password: passwordHash,
       status,
+      user_scope: payload.userScope ?? 'external',
     });
 
     // Handle post-creation assignments
