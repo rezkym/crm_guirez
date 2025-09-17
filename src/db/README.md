@@ -106,3 +106,10 @@ Seeder akan mengisi database dengan data development berikut:
 - **Password Security**: Password di-hash menggunakan PBKDF2 dengan 210,000 iterations
 - **Foreign Key Constraints**: Semua FK menggunakan `RESTRICT` untuk mencegah penghapusan data yang masih berelasi
 - **Soft Delete Support**: Semua tabel memiliki kolom `deleted_at` untuk soft delete
+
+## User Scope Rules
+
+- Scope user terdiri dari dua nilai: `internal` (staf perusahaan) dan `external` (client/hotel).
+- Hanya user dengan role `superadmin` yang boleh membuat user dengan scope `internal`.
+- Jika pembuat adalah `superadmin`, user baru akan dipaksakan `internal` (payload userScope diabaikan untuk saat ini).
+- Jika pembuat bukan `superadmin`, user baru dipaksakan `external` dan percobaan memaksa `userScope='internal'` ditolak (403).
