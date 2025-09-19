@@ -72,15 +72,13 @@ Database terdiri dari 8 tabel utama:
 
 Seeder akan mengisi database dengan data development berikut:
 
-### Users (dengan scope)
-- Internal (dibuat/di-manage oleh superadmin):
-  - `admin@example.com` / `admin123` — Super Administrator (user_scope=internal)
-  - `internal.admin@example.com` / `admin123` — Internal Admin (user_scope=internal)
-- Eksternal (client/hotel):
-  - `owner@example.com` / `owner123` — Hotel Owner (user_scope=external)
-  - `manager@example.com` / `manager123` — Hotel Manager (user_scope=external)
-  - `marketing@example.com` / `marketing123` — Hotel Marketing (user_scope=external)
-  - `user@example.com` / `user123` — Regular User (user_scope=external)
+### Users
+- `admin@example.com` / `admin123` — Super Administrator
+- `internal.admin@example.com` / `admin123` — Internal Admin
+- `owner@example.com` / `owner123` — Hotel Owner
+- `manager@example.com` / `manager123` — Hotel Manager
+- `marketing@example.com` / `marketing123` — Hotel Marketing
+- `user@example.com` / `user123` — Regular User
 
 ### Permissions
 - `users:read`, `users:write`
@@ -106,10 +104,3 @@ Seeder akan mengisi database dengan data development berikut:
 - **Password Security**: Password di-hash menggunakan PBKDF2 dengan 210,000 iterations
 - **Foreign Key Constraints**: Semua FK menggunakan `RESTRICT` untuk mencegah penghapusan data yang masih berelasi
 - **Soft Delete Support**: Semua tabel memiliki kolom `deleted_at` untuk soft delete
-
-## User Scope Rules
-
-- Scope user terdiri dari dua nilai: `internal` (staf perusahaan) dan `external` (client/hotel).
-- Hanya user dengan role `superadmin` yang boleh membuat user dengan scope `internal`.
-- Jika pembuat adalah `superadmin`, user baru akan dipaksakan `internal` (payload userScope diabaikan untuk saat ini).
-- Jika pembuat bukan `superadmin`, user baru dipaksakan `external` dan percobaan memaksa `userScope='internal'` ditolak (403).

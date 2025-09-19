@@ -20,14 +20,12 @@ export async function seedDevUsers() {
       name: "Super Administrator",
       password: hashPassword("admin123"),
       status: "active",
-      user_scope: "internal",
     },
     {
       email: "internal.admin@example.com",
       name: "Internal Admin",
       password: hashPassword("admin123"),
       status: "active",
-      user_scope: "internal",
     },
 
     // Eksternal (client/hotel)
@@ -36,28 +34,24 @@ export async function seedDevUsers() {
       name: "Hotel Owner",
       password: hashPassword("owner123"),
       status: "active",
-      user_scope: "external",
     },
     {
       email: "manager@example.com",
       name: "Hotel Manager",
       password: hashPassword("manager123"),
       status: "active",
-      user_scope: "external",
     },
     {
       email: "marketing@example.com",
       name: "Hotel Marketing",
       password: hashPassword("marketing123"),
       status: "active",
-      user_scope: "external",
     },
     {
       email: "user@example.com",
       name: "Regular User",
       password: hashPassword("user123"),
       status: "active",
-      user_scope: "external",
     },
   ];
 
@@ -74,7 +68,10 @@ export async function seedDevUsers() {
 
     // Insert new users
     for (const user of users) {
-      await queryRunner.query("INSERT INTO users (email, name, password, status, user_scope, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())", [user.email, user.name, user.password, user.status, user.user_scope]);
+      await queryRunner.query(
+        "INSERT INTO users (email, name, password, status, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())",
+        [user.email, user.name, user.password, user.status]
+      );
     }
 
     console.log(`✅ ${users.length} dev users berhasil di-seed`);

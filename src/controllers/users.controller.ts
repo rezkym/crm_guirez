@@ -84,25 +84,6 @@ export class UsersController {
       const normalizedRoleSlug = (roleSlug || role)?.toString()?.toLowerCase()?.trim();
       const normalizedHotelId = hotelId ?? hotel_id;
 
-      // Scope protection: only superadmin may assign internal scope
-      const providedUserScope = (req.body?.userScope || req.body?.user_scope)?.toString()?.toLowerCase()?.trim();
-      const isSuperadmin = Array.isArray(req.auth?.roles) && req.auth!.roles.includes('superadmin');
-
-      if (providedUserScope && !['internal', 'external'].includes(providedUserScope)) {
-        res.status(HTTP_STATUS.BAD_REQUEST).json(createErrorResponse('invalid userScope value', req.id));
-        return;
-      }
-
-      if (providedUserScope === 'internal' && !isSuperadmin) {
-        res.status(HTTP_STATUS.FORBIDDEN).json(createErrorResponse('only superadmin may assign internal user scope', req.id));
-        return;
-      }
-
-      // Determine final user scope (focus internal first):
-      // If creator is superadmin, enforce 'internal' (ignore payload to keep consistent policy now)
-      // Else default to 'external'
-      const userScope: 'internal' | 'external' = isSuperadmin ? 'internal' : 'external';
-
       const createPayload = {
         email,
         name,
@@ -110,7 +91,6 @@ export class UsersController {
         status,
         roleSlug: normalizedRoleSlug,
         hotelId: normalizedHotelId ? BigInt(normalizedHotelId) : undefined,
-        userScope,
       };
 
       const user = await this.usersService.create(createPayload);
