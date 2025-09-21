@@ -5,6 +5,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { createErrorResponse } from '../http/response';
 import { HTTP_STATUS } from '../http/httpStatus';
+import { RoleSlug } from '../../rbac';
 
 export function hasRole(...requiredRoles: string[]) {
   return (req: Request, res: Response, next: NextFunction): void => {
@@ -17,15 +18,16 @@ export function hasRole(...requiredRoles: string[]) {
     }
 
     const { roles } = req.auth;
+    const roleSlugs = roles.map(role => role.slug);
 
     // Check superadmin bypass (jika ada)
-    if (roles.includes('superadmin')) {
+    if (roleSlugs.includes(RoleSlug.SUPERADMIN)) {
       next();
       return;
     }
 
     // Check apakah user memiliki salah satu role yang diperlukan
-    const hasRequiredRole = requiredRoles.some(role => roles.includes(role));
+    const hasRequiredRole = requiredRoles.some(role => roleSlugs.includes(role));
 
     if (!hasRequiredRole) {
       res.status(HTTP_STATUS.FORBIDDEN).json(

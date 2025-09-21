@@ -3,30 +3,44 @@
  */
 
 import { AuthContext } from '../../domain/auth';
+import { RoleSlug, isInternalRoleSlug } from '../../rbac';
 
 export class RbacGuardService {
+  static getRoleSlugs(authContext: AuthContext): string[] {
+    return authContext.roles.map(role => role.slug);
+  }
+
+  static isInternalActor(authContext: AuthContext): boolean {
+    if (authContext.scope === 'internal') {
+      return true;
+    }
+
+    return authContext.roles.some(role => isInternalRoleSlug(role.slug));
+  }
+
   /**
    * Check apakah user memiliki role tertentu
    */
   static hasRole(authContext: AuthContext, requiredRoles: string[]): boolean {
-    const { roles } = authContext;
+    const roleSlugs = this.getRoleSlugs(authContext);
 
     // Superadmin bypass
-    if (roles.includes('superadmin')) {
+    if (roleSlugs.includes(RoleSlug.SUPERADMIN)) {
       return true;
     }
 
-    return requiredRoles.some(role => roles.includes(role));
+    return requiredRoles.some(role => roleSlugs.includes(role));
   }
 
   /**
    * Check apakah user memiliki permission tertentu
    */
   static hasPermission(authContext: AuthContext, resource: string, action: string): boolean {
-    const { permissions, roles } = authContext;
+    const { permissions } = authContext;
+    const roleSlugs = this.getRoleSlugs(authContext);
 
     // Superadmin atau wildcard permission bypass
-    if (permissions.includes('*') || roles.includes('superadmin')) {
+    if (permissions.includes('*') || roleSlugs.includes(RoleSlug.SUPERADMIN)) {
       return true;
     }
 
@@ -57,10 +71,11 @@ export class RbacGuardService {
    * Get effective permissions untuk user (expand wildcards)
    */
   static getEffectivePermissions(authContext: AuthContext): string[] {
-    const { permissions, roles } = authContext;
+    const { permissions } = authContext;
+    const roleSlugs = this.getRoleSlugs(authContext);
 
     // Jika superadmin atau punya wildcard, return semua
-    if (roles.includes('superadmin') || permissions.includes('*')) {
+    if (roleSlugs.includes(RoleSlug.SUPERADMIN) || permissions.includes('*')) {
       return ['*'];
     }
 

@@ -5,6 +5,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { createErrorResponse } from '../http/response';
 import { HTTP_STATUS } from '../http/httpStatus';
+import { RoleSlug } from '../../rbac';
 
 export function roleOrPermission(
   requiredRoles: string[], 
@@ -20,15 +21,16 @@ export function roleOrPermission(
     }
 
     const { roles, permissions } = req.auth;
+    const roleSlugs = roles.map(role => role.slug);
 
     // Check superadmin bypass
-    if (roles.includes('superadmin') || permissions.includes('*')) {
+    if (roleSlugs.includes(RoleSlug.SUPERADMIN) || permissions.includes('*')) {
       next();
       return;
     }
 
     // Check roles
-    const hasRequiredRole = requiredRoles.some(role => roles.includes(role));
+    const hasRequiredRole = requiredRoles.some(role => roleSlugs.includes(role));
     
     if (hasRequiredRole) {
       next();
