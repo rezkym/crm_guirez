@@ -2,7 +2,7 @@ import { DataSource, SelectQueryBuilder } from 'typeorm';
 import { User } from '../../domain';
 import { RoleSlug } from '../../rbac';
 import { Page } from '../base.repository';
-import { UserRepository, UserFilter } from '../user.repository';
+import { UserRepository, UserFilter, UserQueryOptions } from '../user.repository';
 
 type RawUser = {
   id: string | number;
@@ -87,6 +87,30 @@ export class UserRepositoryTypeORM implements UserRepository {
     }
   }
 
+  private applyRoleFilters(qb: SelectQueryBuilder<any>, options?: UserQueryOptions): void {
+    if (!options) return;
+
+    if (options.excludeRoleSlugs && options.excludeRoleSlugs.length > 0) {
+      qb.andWhere(`u.id NOT IN (
+        SELECT mhr.model_id
+        FROM model_has_roles mhr
+        INNER JOIN roles r ON r.id = mhr.role_id
+        WHERE mhr.model_type = 'user' AND r.slug IN (:...excludeRoles)
+      )`, { excludeRoles: options.excludeRoleSlugs });
+    }
+
+    if (options.onlyRoleSlugs && options.onlyRoleSlugs.length > 0) {
+      qb.andWhere(`EXISTS (
+        SELECT 1
+        FROM model_has_roles mhr_include
+        INNER JOIN roles r_include ON r_include.id = mhr_include.role_id
+        WHERE mhr_include.model_type = 'user'
+          AND mhr_include.model_id = u.id
+          AND r_include.slug IN (:...includeRoles)
+      )`, { includeRoles: options.onlyRoleSlugs });
+    }
+  }
+
   async findById(id: bigint): Promise<User | null> {
     const row = await this.baseSelect()
       .andWhere('u.id = :id', { id: id.toString() })
@@ -126,8 +150,19 @@ export class UserRepositoryTypeORM implements UserRepository {
     pageSize: number,
     order?: Record<string, 'ASC' | 'DESC'>
   ): Promise<Page<User>> {
+    return this.paginateScoped(filter, page, pageSize, order);
+  }
+
+  async paginateScoped(
+    filter: UserFilter,
+    page: number,
+    pageSize: number,
+    order?: Record<string, 'ASC' | 'DESC'>,
+    options?: UserQueryOptions
+  ): Promise<Page<User>> {
     const qb = this.baseSelect();
     this.applyFilter(qb, filter);
+    this.applyRoleFilters(qb, options);
     if (order) {
       for (const [col, dir] of Object.entries(order)) {
         qb.addOrderBy(`u.${col}`, dir);
@@ -138,7 +173,7 @@ export class UserRepositoryTypeORM implements UserRepository {
 
     const [rows, total] = await Promise.all([
       qb.clone().limit(pageSize).offset((page - 1) * pageSize).getRawMany<RawUser>(),
-      this.count(filter),
+      this.countScoped(filter, options),
     ]);
 
     return { data: rows.map((r) => this.mapRaw(r)), total, page, pageSize };
@@ -202,12 +237,17 @@ export class UserRepositoryTypeORM implements UserRepository {
   }
 
   async count(filter: UserFilter): Promise<number> {
+    return this.countScoped(filter);
+  }
+
+  async countScoped(filter: UserFilter, options?: UserQueryOptions): Promise<number> {
     const qb = this.dataSource
       .createQueryBuilder()
       .from('users', 'u')
       .select('COUNT(1)', 'count')
       .where('u.deleted_at IS NULL');
     this.applyFilter(qb, filter);
+    this.applyRoleFilters(qb, options);
     const row = await qb.getRawOne<{ count: string }>();
     return parseInt(row?.count ?? '0', 10);
   }
@@ -356,5 +396,19 @@ export class UserRepositoryTypeORM implements UserRepository {
         } as any)
         .execute();
     }
+  }
+
+  async getUserRoleSlugs(userId: bigint): Promise<string[]> {
+    const rows = await this.dataSource
+      .createQueryBuilder()
+      .select('r.slug', 'slug')
+      .from('model_has_roles', 'mhr')
+      .innerJoin('roles', 'r', 'r.id = mhr.role_id')
+      .where('mhr.model_type = :modelType', { modelType: 'user' })
+      .andWhere('mhr.model_id = :userId', { userId: userId.toString() })
+      .andWhere('r.deleted_at IS NULL')
+      .getRawMany<{ slug: string }>();
+
+    return rows.map(row => row.slug);
   }
 }
