@@ -1,6 +1,9 @@
-import { User } from '../domain';
-import { UserRepository, UserFilter } from '../repositories/user.repository';
+import { AuthContext } from '../domain/auth';
+import { ForbiddenError } from '../core/http/error';
 import { PasswordService } from '../core/security/password';
+import { User } from '../domain';
+import { UserRepository, UserFilter, UserQueryOptions } from '../repositories/user.repository';
+import { isInternalRoleSlug, RoleSlug } from '../rbac';
 
 export interface CreateUserDTO {
   email: string;
@@ -18,13 +21,15 @@ export interface UpdateUserDTO {
   status?: User['status'];
 }
 
+const INTERNAL_ROLE_EXCLUSIONS: string[] = [RoleSlug.SUPERADMIN, RoleSlug.ADMIN];
+
 /**
  * Users service - handles all user management business logic
  * Provides CRUD operations, role assignment, and hotel association
  */
 export class UsersService {
   private static readonly ALLOWED_STATUSES: User['status'][] = ['active', 'suspended', 'freeze'];
-  private static readonly DEFAULT_ROLE = 'user';
+  private static readonly DEFAULT_ROLE = RoleSlug.USER;
   
   constructor(
     private readonly repo: UserRepository, 
@@ -34,26 +39,42 @@ export class UsersService {
   /**
    * List users with pagination and filtering
    */
-  async list(filter: UserFilter & { page?: number; pageSize?: number }) {
+  async list(filter: UserFilter & { page?: number; pageSize?: number }, actor?: AuthContext) {
     const { page = 1, pageSize = 20, ...rest } = filter || {};
-    return this.repo.paginate(rest, page, pageSize, { id: 'DESC' });
+    const queryOptions: UserQueryOptions | undefined = this.isInternalActor(actor)
+      ? undefined
+      : { excludeRoleSlugs: INTERNAL_ROLE_EXCLUSIONS };
+
+    return this.repo.paginateScoped(rest, page, pageSize, { id: 'DESC' }, queryOptions);
   }
 
   /**
    * Get user by ID
    */
-  async getById(id: bigint): Promise<User | null> {
-    return this.repo.findById(id);
+  async getById(id: bigint, actor?: AuthContext): Promise<User | null> {
+    const user = await this.repo.findById(id);
+    if (!user) {
+      return null;
+    }
+
+    await this.assertActorCanAccessUser(actor, id);
+    return user;
   }
 
   /**
    * Create new user with role assignment and hotel association
    */
-  async create(payload: CreateUserDTO): Promise<User> {
+  async create(payload: CreateUserDTO, actor?: AuthContext): Promise<User> {
     // Check email uniqueness
     const existing = await this.repo.findByEmail(payload.email);
     if (existing) {
       throw new Error('Email already in use');
+    }
+
+    const normalizedRoleSlug = (payload.roleSlug || UsersService.DEFAULT_ROLE).toString().toLowerCase();
+
+    if (!this.isInternalActor(actor) && isInternalRoleSlug(normalizedRoleSlug)) {
+      throw new ForbiddenError('External actors cannot assign internal roles');
     }
 
     // Hash password menggunakan bcrypt
@@ -71,7 +92,10 @@ export class UsersService {
     });
 
     // Handle post-creation assignments
-    await this.handlePostCreationAssignments(user.id, payload);
+    await this.handlePostCreationAssignments(user.id, {
+      ...payload,
+      roleSlug: normalizedRoleSlug,
+    });
 
     return user;
   }
@@ -79,7 +103,9 @@ export class UsersService {
   /**
    * Update user information
    */
-  async update(id: bigint, payload: UpdateUserDTO): Promise<User> {
+  async update(id: bigint, payload: UpdateUserDTO, actor?: AuthContext): Promise<User> {
+    await this.assertActorCanAccessUser(actor, id);
+
     const updates: Partial<User> = {};
     
     if (payload.email) {
@@ -104,7 +130,8 @@ export class UsersService {
   /**
    * Soft delete user
    */
-  async remove(id: bigint): Promise<{ success: boolean }> {
+  async remove(id: bigint, actor?: AuthContext): Promise<{ success: boolean }> {
+    await this.assertActorCanAccessUser(actor, id);
     await this.repo.softDeleteById(id);
     return { success: true };
   }
@@ -153,6 +180,29 @@ export class UsersService {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.warn(`Failed to assign role '${roleToAssign}' to user ${userId}:`, errorMessage);
       // Continue execution - role can be assigned later
+    }
+  }
+
+  private isInternalActor(actor?: AuthContext): boolean {
+    if (!actor) {
+      return false;
+    }
+
+    if (actor.scope === 'internal') {
+      return true;
+    }
+
+    return actor.roles.some(role => isInternalRoleSlug(role.slug));
+  }
+
+  private async assertActorCanAccessUser(actor: AuthContext | undefined, targetUserId: bigint): Promise<void> {
+    if (this.isInternalActor(actor)) {
+      return;
+    }
+
+    const targetRoles = await this.repo.getUserRoleSlugs(targetUserId);
+    if (targetRoles.some(isInternalRoleSlug)) {
+      throw new ForbiddenError('External actors cannot access internal users');
     }
   }
 }
