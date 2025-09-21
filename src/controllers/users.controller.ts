@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { ForbiddenError } from '../core/http/error';
 import { UsersService } from '../services/users.service';
 import { HTTP_STATUS } from '../core/http/httpStatus';
 import { createErrorResponse, createSuccessResponse } from '../core/http/response';
@@ -30,7 +31,7 @@ export class UsersController {
       const status = (req.query.status as any) || undefined;
 
       console.log('About to call usersService.list with:', { page, pageSize, q, status });
-      const result = await this.usersService.list({ page, pageSize, q, status });
+      const result = await this.usersService.list({ page, pageSize, q, status }, req.auth);
       res.status(HTTP_STATUS.OK).json(createSuccessResponse(toUserPageDTO(result), req.id));
     } catch (error) {
       console.error('Error in UsersController.list:', error);
@@ -46,7 +47,7 @@ export class UsersController {
   async get(req: Request, res: Response): Promise<void> {
     try {
       const id = BigInt(req.params.id);
-      const user = await this.usersService.getById(id);
+      const user = await this.usersService.getById(id, req.auth);
       
       if (!user) {
         res.status(HTTP_STATUS.NOT_FOUND).json(createErrorResponse('User not found', req.id));
@@ -55,6 +56,10 @@ export class UsersController {
       
       res.status(HTTP_STATUS.OK).json(createSuccessResponse(toUserDTO(user), req.id));
     } catch (error) {
+      if (error instanceof ForbiddenError) {
+        res.status(HTTP_STATUS.FORBIDDEN).json(createErrorResponse(error.message, req.id));
+        return;
+      }
       const errorMessage = error instanceof Error ? error.message : 'Failed to get user';
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(createErrorResponse(errorMessage, req.id));
     }
@@ -93,9 +98,13 @@ export class UsersController {
         hotelId: normalizedHotelId ? BigInt(normalizedHotelId) : undefined,
       };
 
-      const user = await this.usersService.create(createPayload);
+      const user = await this.usersService.create(createPayload, req.auth);
       res.status(HTTP_STATUS.CREATED).json(createSuccessResponse(toUserDTO(user), req.id));
     } catch (error) {
+      if (error instanceof ForbiddenError) {
+        res.status(HTTP_STATUS.FORBIDDEN).json(createErrorResponse(error.message, req.id));
+        return;
+      }
       const errorMessage = error instanceof Error ? error.message : 'Failed to create user';
       const statusCode = errorMessage.includes('Email already') 
         ? HTTP_STATUS.CONFLICT 
@@ -120,9 +129,13 @@ export class UsersController {
         status,
       };
 
-      const updated = await this.usersService.update(id, updatePayload);
+      const updated = await this.usersService.update(id, updatePayload, req.auth);
       res.status(HTTP_STATUS.OK).json(createSuccessResponse(toUserDTO(updated), req.id));
     } catch (error) {
+      if (error instanceof ForbiddenError) {
+        res.status(HTTP_STATUS.FORBIDDEN).json(createErrorResponse(error.message, req.id));
+        return;
+      }
       const errorMessage = error instanceof Error ? error.message : 'Failed to update user';
       res.status(HTTP_STATUS.UNPROCESSABLE_ENTITY).json(createErrorResponse(errorMessage, req.id));
     }
@@ -135,9 +148,13 @@ export class UsersController {
   async remove(req: Request, res: Response): Promise<void> {
     try {
       const id = BigInt(req.params.id);
-      await this.usersService.remove(id);
+      await this.usersService.remove(id, req.auth);
       res.status(HTTP_STATUS.OK).json(createSuccessResponse(null, req.id));
     } catch (error) {
+      if (error instanceof ForbiddenError) {
+        res.status(HTTP_STATUS.FORBIDDEN).json(createErrorResponse(error.message, req.id));
+        return;
+      }
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete user';
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(createErrorResponse(errorMessage, req.id));
     }
