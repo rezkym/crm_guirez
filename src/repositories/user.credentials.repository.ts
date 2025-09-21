@@ -2,7 +2,8 @@
  * User credentials repository - implementasi kontrak untuk auth
  */
 
-import { UserCredentials, UserCredentialsRepository, UserStatus } from '../domain/auth';
+import { AuthRole, AuthScope, UserCredentials, UserCredentialsRepository, UserStatus } from '../domain/auth';
+import { isInternalRoleSlug } from '../rbac/enums';
 
 export class MemoryUserCredentialsRepository implements UserCredentialsRepository {
   private users: Map<string, UserCredentials> = new Map();
@@ -21,8 +22,9 @@ export class MemoryUserCredentialsRepository implements UserCredentialsRepositor
         passwordHash: 'hyIZWdhRYMj6X6E285oUx8h4KhRmzkCRvMNBiYPJHw0=', // password: admin123
         passwordSalt: 'dGVzdFNhbHQxMjM=',
         status: UserStatus.ACTIVE,
-        roles: ['superadmin'],
-        permissions: ['*']
+        roles: [this.createRole('superadmin')],
+        permissions: ['*'],
+        scope: 'internal'
       },
       {
         id: '2', 
@@ -30,8 +32,9 @@ export class MemoryUserCredentialsRepository implements UserCredentialsRepositor
         passwordHash: 'G3K+ke03szcYEPYIZOYIqJn+tjGRx/YdMKNO4V0a1ik=', // password: user123
         passwordSalt: 'dGVzdFNhbHQ0NTY=',
         status: UserStatus.ACTIVE,
-        roles: ['user'],
-        permissions: ['read:own']
+        roles: [this.createRole('user')],
+        permissions: ['read:own'],
+        scope: 'external'
       },
       {
         id: '3',
@@ -39,8 +42,9 @@ export class MemoryUserCredentialsRepository implements UserCredentialsRepositor
         passwordHash: 'lMHeZTRMBYsNd87G0qyeqRofqimgyCODZkcidnSHx7M=', // password: manager123
         passwordSalt: 'dGVzdFNhbHQ3ODk=',
         status: UserStatus.ACTIVE,
-        roles: ['manager'],
-        permissions: ['read:all', 'write:team']
+        roles: [this.createRole('manager')],
+        permissions: ['read:all', 'write:team'],
+        scope: 'external'
       }
     ];
 
@@ -52,7 +56,7 @@ export class MemoryUserCredentialsRepository implements UserCredentialsRepositor
 
   async findByEmail(email: string): Promise<UserCredentials | null> {
     const userId = this.emailToId.get(email);
-    
+
     if (!userId) {
       return null;
     }
@@ -66,7 +70,7 @@ export class MemoryUserCredentialsRepository implements UserCredentialsRepositor
 
   async updateLastLogin(userId: string): Promise<void> {
     const user = this.users.get(userId);
-    
+
     if (user) {
       // Dalam implementasi memory ini, kita tidak simpan lastLogin
       // Bisa extend interface UserCredentials jika perlu track ini
@@ -77,9 +81,12 @@ export class MemoryUserCredentialsRepository implements UserCredentialsRepositor
   // Method tambahan untuk management (bisa dipindah ke service terpisah)
   async createUser(userData: Omit<UserCredentials, 'id'>): Promise<UserCredentials> {
     const id = (this.users.size + 1).toString();
+    const normalizedRoles = userData.roles?.length ? userData.roles : [this.createRole('user')];
     const user: UserCredentials = {
       ...userData,
-      id
+      id,
+      roles: normalizedRoles,
+      scope: this.determineScope(normalizedRoles),
     };
 
     this.users.set(id, user);
@@ -95,7 +102,14 @@ export class MemoryUserCredentialsRepository implements UserCredentialsRepositor
       return null;
     }
 
-    const updatedUser = { ...user, ...updates, id: userId };
+    const mergedRoles = updates.roles ?? user.roles;
+    const updatedUser: UserCredentials = {
+      ...user,
+      ...updates,
+      roles: mergedRoles,
+      scope: this.determineScope(mergedRoles),
+      id: userId,
+    };
     
     // Update email mapping jika email berubah
     if (updates.email && updates.email !== user.email) {
@@ -136,5 +150,21 @@ export class MemoryUserCredentialsRepository implements UserCredentialsRepositor
 
   getUserCount(): number {
     return this.users.size;
+  }
+
+  private createRole(slug: string, hotelId?: string | null): AuthRole {
+    const scope: AuthScope = isInternalRoleSlug(slug) ? 'internal' : 'external';
+    return {
+      slug,
+      hotelId: hotelId ?? null,
+      scope,
+    };
+  }
+
+  private determineScope(roles: AuthRole[]): AuthScope {
+    if (!roles || roles.length === 0) {
+      return 'external';
+    }
+    return roles.some(role => isInternalRoleSlug(role.slug)) ? 'internal' : 'external';
   }
 }

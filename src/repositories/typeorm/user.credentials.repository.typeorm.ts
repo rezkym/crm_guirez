@@ -4,7 +4,8 @@
 
 import { DataSource } from 'typeorm';
 import { UserCredentialsRepository } from '../../domain/auth/ports';
-import { UserCredentials, UserStatus } from '../../domain/auth/types';
+import { AuthRole, AuthScope, UserCredentials, UserStatus } from '../../domain/auth/types';
+import { isInternalRoleSlug } from '../../rbac/enums';
 
 export class UserCredentialsRepoTypeORM implements UserCredentialsRepository {
   constructor(private dataSource: DataSource) {}
@@ -31,6 +32,7 @@ export class UserCredentialsRepoTypeORM implements UserCredentialsRepository {
     // Get user roles and permissions
     const roles = await this.getUserRoles(user.id);
     const permissions = await this.getUserPermissions(user.id);
+    const scope = this.determineScope(roles);
 
     return {
       id: user.id.toString(),
@@ -39,7 +41,8 @@ export class UserCredentialsRepoTypeORM implements UserCredentialsRepository {
       passwordSalt: '',
       status: this.mapUserStatus(user.status),
       roles,
-      permissions
+      permissions,
+      scope,
     };
   }
 
@@ -65,6 +68,7 @@ export class UserCredentialsRepoTypeORM implements UserCredentialsRepository {
     // Get user roles and permissions
     const roles = await this.getUserRoles(user.id);
     const permissions = await this.getUserPermissions(user.id);
+    const scope = this.determineScope(roles);
 
     return {
       id: user.id.toString(),
@@ -73,7 +77,8 @@ export class UserCredentialsRepoTypeORM implements UserCredentialsRepository {
       passwordSalt: '',
       status: this.mapUserStatus(user.status),
       roles,
-      permissions
+      permissions,
+      scope,
     };
   }
 
@@ -101,16 +106,23 @@ export class UserCredentialsRepoTypeORM implements UserCredentialsRepository {
   /**
    * Get user roles
    */
-  private async getUserRoles(userId: number): Promise<string[]> {
+  private async getUserRoles(userId: number): Promise<AuthRole[]> {
+    type RawRoleRow = { slug: string; hotel_id: string | null };
+
     const roles = await this.dataSource.createQueryBuilder()
-      .select('r.slug')
+      .select('r.slug', 'slug')
+      .addSelect('mhr.hotel_id', 'hotel_id')
       .from('roles', 'r')
       .innerJoin('model_has_roles', 'mhr', 'r.id = mhr.role_id')
       .where('mhr.model_id = :userId', { userId })
       .andWhere('mhr.model_type = :modelType', { modelType: 'user' })
-      .getRawMany();
+      .getRawMany<RawRoleRow>();
 
-    return roles.map(role => role.slug);
+    return roles.map<AuthRole>(role => ({
+      slug: role.slug,
+      hotelId: role.hotel_id != null ? role.hotel_id.toString() : null,
+      scope: isInternalRoleSlug(role.slug) ? 'internal' : 'external',
+    }));
   }
 
   /**
@@ -158,5 +170,12 @@ export class UserCredentialsRepoTypeORM implements UserCredentialsRepository {
       default:
         return UserStatus.INACTIVE;
     }
+  }
+
+  private determineScope(roles: AuthRole[]): AuthScope {
+    if (roles.some(role => role.scope === 'internal')) {
+      return 'internal';
+    }
+    return 'external';
   }
 }

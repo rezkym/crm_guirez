@@ -29,21 +29,31 @@ export interface TokenRecord {
   rotatedFrom?: string;
 }
 
+export type AuthScope = 'internal' | 'external';
+
+export interface AuthRole {
+  slug: string;
+  hotelId?: string | null;
+  scope: AuthScope;
+}
+
 export interface UserCredentials {
   id: string;
   email: string;
   passwordHash: string;
   passwordSalt: string;
   status: UserStatus;
-  roles: string[];
+  roles: AuthRole[];
   permissions: string[];
+  scope: AuthScope;
 }
 
 export interface AuthContext {
   userId: string;
   sessionId: string;
-  roles: string[];
+  roles: AuthRole[];
   permissions: string[];
+  scope: AuthScope;
 }
 
 export interface RateLimitRecord {

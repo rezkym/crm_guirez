@@ -9,7 +9,9 @@ import {
   RefreshResult,
   SessionRevokeReason,
   UserStatus,
-  AuthContext
+  AuthContext,
+  AuthRole,
+  AuthScope
 } from '../domain/auth';
 import { PasswordService } from '../core/security';
 import { RateLimitService } from '../core/security';
@@ -30,7 +32,10 @@ export interface LoginResult {
     email: string;
     status: string;
     roles: string[];
+    scope: AuthScope;
   };
+  roleContexts: AuthRole[];
+  permissions: string[];
   tokens: TokenPair;
 }
 
@@ -39,8 +44,10 @@ export interface MeResult {
     id: string;
     email: string;
     status: string;
+    scope: AuthScope;
   };
   roles: string[];
+  roleContexts: AuthRole[];
   permissions: string[];
 }
 
@@ -129,13 +136,18 @@ export class AuthService {
         duration
       });
 
+      const roleSlugs = user.roles.map(role => role.slug);
+
       return {
         user: {
           id: user.id,
           email: user.email,
           status: user.status,
-          roles: user.roles
+          roles: roleSlugs,
+          scope: user.scope,
         },
+        roleContexts: user.roles,
+        permissions: user.permissions,
         tokens
       };
 
@@ -263,14 +275,18 @@ export class AuthService {
       throw new Error('User not found');
     }
 
+    const roleSlugs = user.roles.map(role => role.slug);
+
     return {
       user: {
         id: user.id,
         email: user.email,
-        status: user.status
+        status: user.status,
+        scope: user.scope,
       },
-      roles: user.roles,
-      permissions: user.permissions
+      roles: roleSlugs,
+      roleContexts: user.roles,
+      permissions: user.permissions,
     };
   }
 
@@ -296,7 +312,8 @@ export class AuthService {
       userId: user.id,
       sessionId: session.sessionId,
       roles: user.roles,
-      permissions: user.permissions
+      permissions: user.permissions,
+      scope: user.scope,
     };
   }
 
