@@ -14,4 +14,6 @@ export interface HotelRepository extends BaseRepository<Hotel, HotelFilter> {
     page?: number,
     pageSize?: number
   ): Promise<Page<Hotel>>;
+
+  getHotelIdsForUser(userId: bigint): Promise<bigint[]>;
 }
