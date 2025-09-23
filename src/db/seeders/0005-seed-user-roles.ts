@@ -13,25 +13,31 @@ export async function seedUserRoles() {
     
     // Define user-role mappings based on email patterns
     const userRoleMappings = [
-      // Internal
-      { emailPattern: 'admin@example.com', roleSlug: 'superadmin' },
-      { emailPattern: 'internal.admin@example.com', roleSlug: 'admin' },
+      // Internal (gunakan hotel pertama sebagai konteks default)
+      { emailPattern: 'admin@example.com', roleSlug: 'superadmin', hotelName: 'Hotel Alpha' },
+      { emailPattern: 'internal.admin@example.com', roleSlug: 'admin', hotelName: 'Hotel Alpha' },
 
-      // External (hotel scoped)
-      { emailPattern: 'owner@example.com', roleSlug: 'owner' },
-      { emailPattern: 'manager@example.com', roleSlug: 'manager' },
-      { emailPattern: 'marketing@example.com', roleSlug: 'marketing' },
-      { emailPattern: 'user@example.com', roleSlug: 'user' },
+      // Eksternal Hotel Alpha
+      { emailPattern: 'owner@example.com', roleSlug: 'owner', hotelName: 'Hotel Alpha' },
+      { emailPattern: 'marketing@example.com', roleSlug: 'marketing', hotelName: 'Hotel Alpha' },
+      { emailPattern: 'user@example.com', roleSlug: 'user', hotelName: 'Hotel Alpha' },
+
+      // Eksternal Hotel Beta
+      { emailPattern: 'owner2@example.com', roleSlug: 'owner', hotelName: 'Hotel Beta' },
+      { emailPattern: 'manager@example.com', roleSlug: 'manager', hotelName: 'Hotel Beta' },
     ];
 
     console.log('🔗 Assigning roles to users...');
     
     // Get hotel ID yang sudah dibuat sebelumnya (untuk assignment eksternal)
-    const hotels = await queryRunner.query('SELECT id FROM hotels WHERE name = ?', ['Hotel Contoh']);
-    if (hotels.length === 0) {
-      throw new Error('Hotel not found. Please run hotel seeder first.');
+    const hotels = await queryRunner.query('SELECT id, name FROM hotels WHERE name IN (?, ?)', ['Hotel Alpha', 'Hotel Beta']);
+    if (hotels.length < 2) {
+      throw new Error('Hotels not found. Please run hotel seeder first.');
     }
-    const hotelId = hotels[0].id;
+    const hotelMap: Record<string, string> = {};
+    hotels.forEach((hotel: any) => {
+      hotelMap[hotel.name] = hotel.id;
+    });
     
     for (const mapping of userRoleMappings) {
       // Get user by email
@@ -58,6 +64,12 @@ export async function seedUserRoles() {
 
       const user = users[0];
       const role = roles[0];
+
+      const hotelId = hotelMap[mapping.hotelName];
+      if (!hotelId) {
+        console.log(`⚠️  Hotel ${mapping.hotelName} not found for user ${mapping.emailPattern}, skipping...`);
+        continue;
+      }
 
       // Assign role with hotel scope (schema mensyaratkan hotel_id NOT NULL)
       await queryRunner.query(
