@@ -1,6 +1,10 @@
-import { User } from '../domain';
-import { UserRepository, UserFilter } from '../repositories/user.repository';
+import { AuthContext } from '../domain/auth';
+import { ForbiddenError } from '../core/http/error';
 import { PasswordService } from '../core/security/password';
+import { User } from '../domain';
+import { UserRepository, UserFilter, UserQueryOptions } from '../repositories/user.repository';
+import { HotelRepository } from '../repositories/hotel.repository';
+import { isInternalRoleSlug, RoleSlug } from '../rbac';
 
 export interface CreateUserDTO {
   email: string;
@@ -16,7 +20,11 @@ export interface UpdateUserDTO {
   name?: string;
   password?: string;
   status?: User['status'];
+  roleSlug?: string;
+  hotelId?: bigint;
 }
+
+const INTERNAL_ROLE_EXCLUSIONS: string[] = [RoleSlug.SUPERADMIN, RoleSlug.ADMIN];
 
 /**
  * Users service - handles all user management business logic
@@ -24,36 +32,112 @@ export interface UpdateUserDTO {
  */
 export class UsersService {
   private static readonly ALLOWED_STATUSES: User['status'][] = ['active', 'suspended', 'freeze'];
-  private static readonly DEFAULT_ROLE = 'user';
+  private static readonly DEFAULT_ROLE = RoleSlug.USER;
   
   constructor(
-    private readonly repo: UserRepository, 
-    private readonly passwordService: PasswordService
+    private readonly repo: UserRepository,
+    private readonly passwordService: PasswordService,
+    private readonly hotelRepo?: HotelRepository
   ) {}
 
   /**
    * List users with pagination and filtering
    */
-  async list(filter: UserFilter & { page?: number; pageSize?: number }) {
+  async list(filter: UserFilter & { page?: number; pageSize?: number }, actor?: AuthContext) {
     const { page = 1, pageSize = 20, ...rest } = filter || {};
-    return this.repo.paginate(rest, page, pageSize, { id: 'DESC' });
+
+    const normalizedFilter: UserFilter = { ...rest };
+    if (normalizedFilter.hotel_id && typeof normalizedFilter.hotel_id !== 'bigint') {
+      normalizedFilter.hotel_id = BigInt(normalizedFilter.hotel_id as any);
+    }
+
+    if (this.isInternalActor(actor)) {
+      return this.repo.paginateScoped(normalizedFilter, page, pageSize, { id: 'DESC' });
+    }
+
+    if (!actor) {
+      throw new ForbiddenError('Authentication required');
+    }
+
+    const actorUserId = BigInt(actor.userId);
+    const accessibleHotelIds = await this.resolveAccessibleHotelIds(actorUserId);
+
+    if (normalizedFilter.hotel_id) {
+      const allowed = accessibleHotelIds.some(id => id === normalizedFilter.hotel_id);
+      if (!allowed) {
+        return {
+          data: [],
+          total: 0,
+          page,
+          pageSize,
+        };
+      }
+    }
+
+    const queryOptions: UserQueryOptions = {
+      excludeRoleSlugs: INTERNAL_ROLE_EXCLUSIONS,
+      includeUserIds: [actorUserId],
+    };
+
+    if (accessibleHotelIds.length > 0) {
+      queryOptions.hotelIds = accessibleHotelIds;
+    }
+
+    return this.repo.paginateScoped(normalizedFilter, page, pageSize, { id: 'DESC' }, queryOptions);
   }
 
   /**
    * Get user by ID
    */
-  async getById(id: bigint): Promise<User | null> {
-    return this.repo.findById(id);
+  async getById(id: bigint, actor?: AuthContext): Promise<User | null> {
+    const user = await this.repo.findById(id);
+    if (!user) {
+      return null;
+    }
+
+    await this.assertActorCanAccessUser(actor, id);
+    return user;
   }
 
   /**
    * Create new user with role assignment and hotel association
    */
-  async create(payload: CreateUserDTO): Promise<User> {
+  async create(payload: CreateUserDTO, actor?: AuthContext): Promise<User> {
     // Check email uniqueness
     const existing = await this.repo.findByEmail(payload.email);
     if (existing) {
       throw new Error('Email already in use');
+    }
+
+    const normalizedRoleSlug = (payload.roleSlug || UsersService.DEFAULT_ROLE).toString().toLowerCase() as RoleSlug;
+
+    if (!this.isInternalActor(actor) && isInternalRoleSlug(normalizedRoleSlug)) {
+      throw new ForbiddenError('External actors cannot assign internal roles');
+    }
+
+    let targetHotelId = payload.hotelId;
+
+    if (!this.isInternalActor(actor)) {
+      if (!actor) {
+        throw new ForbiddenError('Authentication required');
+      }
+
+      const actorUserId = BigInt(actor.userId);
+      const accessibleHotelIds = await this.resolveAccessibleHotelIds(actorUserId);
+
+      if (targetHotelId) {
+        if (!accessibleHotelIds.some(id => id === targetHotelId)) {
+          throw new ForbiddenError('External actors cannot assign users to other hotels');
+        }
+      } else {
+        if (accessibleHotelIds.length === 1) {
+          targetHotelId = accessibleHotelIds[0];
+        } else if (accessibleHotelIds.length === 0) {
+          throw new ForbiddenError('External actors must belong to a hotel before creating users');
+        } else {
+          throw new ForbiddenError('Specify hotelId when managing multiple hotels');
+        }
+      }
     }
 
     // Hash password menggunakan bcrypt
@@ -63,15 +147,12 @@ export class UsersService {
     const status = this.validateAndNormalizeStatus(payload.status);
 
     // Create user
-    const user = await this.repo.create({
+    const user = await this.repo.createWithRoleAndHotel({
       email: payload.email,
       name: payload.name ?? '',
       password: passwordHash,
       status,
-    });
-
-    // Handle post-creation assignments
-    await this.handlePostCreationAssignments(user.id, payload);
+    }, normalizedRoleSlug, targetHotelId);
 
     return user;
   }
@@ -79,7 +160,9 @@ export class UsersService {
   /**
    * Update user information
    */
-  async update(id: bigint, payload: UpdateUserDTO): Promise<User> {
+  async update(id: bigint, payload: UpdateUserDTO, actor?: AuthContext): Promise<User> {
+    await this.assertActorCanAccessUser(actor, id);
+
     const updates: Partial<User> = {};
     
     if (payload.email) {
@@ -98,13 +181,56 @@ export class UsersService {
       updates.password = await this.passwordService.createPasswordHash(payload.password);
     }
 
-    return this.repo.updateById(id, updates);
+    const updatedUser = await this.repo.updateById(id, updates);
+
+    if (payload.roleSlug) {
+      const normalizedRoleSlug = payload.roleSlug.toString().toLowerCase() as RoleSlug;
+
+      if (!this.isInternalActor(actor) && isInternalRoleSlug(normalizedRoleSlug)) {
+        throw new ForbiddenError('External actors cannot assign internal roles');
+      }
+
+      let targetHotelId = payload.hotelId;
+
+      if (!this.isInternalActor(actor)) {
+        if (!actor) {
+          throw new ForbiddenError('Authentication required');
+        }
+
+        const actorUserId = BigInt(actor.userId);
+        const accessibleHotelIds = await this.resolveAccessibleHotelIds(actorUserId);
+
+        if (targetHotelId) {
+          if (!accessibleHotelIds.some(id => id === targetHotelId)) {
+            throw new ForbiddenError('External actors cannot assign users to other hotels');
+          }
+        } else {
+          const targetHotels = await this.repo.getUserHotelIds(id);
+          const intersection = targetHotels.filter(hotelId => accessibleHotelIds.some(accessible => accessible === hotelId));
+
+          if (intersection.length === 1) {
+            targetHotelId = intersection[0];
+          } else if (intersection.length === 0 && accessibleHotelIds.length === 1) {
+            targetHotelId = accessibleHotelIds[0];
+          } else if (intersection.length === 0 && accessibleHotelIds.length === 0) {
+            throw new ForbiddenError('External actors must belong to a hotel before reassigning roles');
+          } else {
+            throw new ForbiddenError('Specify hotelId when managing multiple hotels');
+          }
+        }
+      }
+
+      await this.repo.updateUserRoleAndHotel(id, normalizedRoleSlug, targetHotelId);
+    }
+
+    return updatedUser;
   }
 
   /**
    * Soft delete user
    */
-  async remove(id: bigint): Promise<{ success: boolean }> {
+  async remove(id: bigint, actor?: AuthContext): Promise<{ success: boolean }> {
+    await this.assertActorCanAccessUser(actor, id);
     await this.repo.softDeleteById(id);
     return { success: true };
   }
@@ -124,35 +250,65 @@ export class UsersService {
     return status;
   }
 
-  /**
-   * Handle post-creation assignments (hotel attachment and role assignment)
-   */
-  private async handlePostCreationAssignments(
-    userId: bigint, 
-    payload: CreateUserDTO
-  ): Promise<void> {
-    const roleToAssign = (payload.roleSlug || UsersService.DEFAULT_ROLE).toLowerCase();
+  private isInternalActor(actor?: AuthContext): boolean {
+    if (!actor) {
+      return false;
+    }
 
-    // Attach to hotel if provided
-    if (payload.hotelId) {
-      try {
-        await this.repo.attachToHotel(userId, payload.hotelId);
-        console.log(`User ${userId} successfully attached to hotel ${payload.hotelId}`);
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        console.warn(`Failed to attach user ${userId} to hotel ${payload.hotelId}:`, errorMessage);
-        // Continue execution - hotel attachment is not critical for user creation
+    if (actor.scope === 'internal') {
+      return true;
+    }
+
+    return actor.roles.some(role => isInternalRoleSlug(role.slug));
+  }
+
+  private async assertActorCanAccessUser(actor: AuthContext | undefined, targetUserId: bigint): Promise<void> {
+    if (this.isInternalActor(actor)) {
+      return;
+    }
+
+    if (!actor) {
+      throw new ForbiddenError('Authentication required');
+    }
+
+    const targetRoles = await this.repo.getUserRoleSlugs(targetUserId);
+    if (targetRoles.some(isInternalRoleSlug)) {
+      throw new ForbiddenError('External actors cannot access internal users');
+    }
+
+    const actorUserId = BigInt(actor.userId);
+    if (actorUserId === targetUserId) {
+      return;
+    }
+
+    const accessibleHotelIds = await this.resolveAccessibleHotelIds(actorUserId);
+
+    if (accessibleHotelIds.length === 0) {
+      throw new ForbiddenError('External actors cannot access other users');
+    }
+
+    const targetHotelIds = await this.repo.getUserHotelIds(targetUserId);
+    const sharesHotel = targetHotelIds.some(targetHotelId =>
+      accessibleHotelIds.some(accessibleId => accessibleId === targetHotelId)
+    );
+
+    if (!sharesHotel) {
+      throw new ForbiddenError('External actors cannot access users outside their hotels');
+    }
+  }
+
+  private async resolveAccessibleHotelIds(userId: bigint): Promise<bigint[]> {
+    if (this.hotelRepo) {
+      const hotelIds = await this.hotelRepo.getHotelIdsForUser(userId);
+      if (hotelIds.length > 0) {
+        return hotelIds;
       }
     }
 
-    // Assign default role
-    try {
-      await this.repo.assignRoleBySlug(userId, roleToAssign, payload.hotelId);
-      console.log(`User ${userId} successfully assigned role '${roleToAssign}'`);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.warn(`Failed to assign role '${roleToAssign}' to user ${userId}:`, errorMessage);
-      // Continue execution - role can be assigned later
+    if (this.repo.getUserHotelIds) {
+      return this.repo.getUserHotelIds(userId);
     }
+
+    return [];
   }
 }

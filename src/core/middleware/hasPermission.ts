@@ -5,6 +5,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { createErrorResponse } from '../http/response';
 import { HTTP_STATUS } from '../http/httpStatus';
+import { RoleSlug } from '../../rbac';
 
 export function hasPermission(resource: string, action: string) {
   return (req: Request, res: Response, next: NextFunction): void => {
@@ -17,9 +18,10 @@ export function hasPermission(resource: string, action: string) {
     }
 
     const { permissions, roles } = req.auth;
+    const roleSlugs = roles.map(role => role.slug);
 
     // Check superadmin bypass (wildcard permission)
-    if (permissions.includes('*') || roles.includes('superadmin')) {
+    if (permissions.includes('*') || roleSlugs.includes(RoleSlug.SUPERADMIN)) {
       next();
       return;
     }

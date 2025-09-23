@@ -31,4 +31,3 @@ export function toUserPageDTO(page: Page<User>): Page<UserDTO> {
     data: page.data.map(toUserDTO),
   };
 }
-

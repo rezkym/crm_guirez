@@ -21,11 +21,13 @@ export function createMeRouter(authService: any): Router {
    * GET /api/v1/me/profile - Basic profile (sudah ada di auth.router)
    */
   meRouter.get('/profile', asyncHandler(async (req: Request, res: Response) => {
+    const roleSlugs = req.auth!.roles.map(role => role.slug);
     const profile = {
       userId: req.auth!.userId,
       sessionId: req.auth!.sessionId,
-      roles: req.auth!.roles,
+      roles: roleSlugs,
       permissions: req.auth!.permissions,
+      scope: req.auth!.scope,
       timestamp: new Date().toISOString()
     };
 
@@ -40,10 +42,11 @@ export function createMeRouter(authService: any): Router {
   meRouter.get('/admin', 
     hasRole('admin', 'manager'),
     asyncHandler(async (req: Request, res: Response) => {
+      const roleSlugs = req.auth!.roles.map(role => role.slug);
       const adminData = {
         message: 'This is admin-only data',
         userId: req.auth!.userId,
-        adminLevel: req.auth!.roles
+        adminLevel: roleSlugs
       };
 
       res.status(HTTP_STATUS.OK).json(
@@ -75,11 +78,12 @@ export function createMeRouter(authService: any): Router {
   meRouter.post('/action',
     roleOrPermission(['manager'], ['write:actions']),
     asyncHandler(async (req: Request, res: Response) => {
+      const roleSlugs = req.auth!.roles.map(role => role.slug);
       const result = {
         message: 'Action executed successfully',
         executedBy: req.auth!.userId,
         authorization: {
-          roles: req.auth!.roles,
+          roles: roleSlugs,
           permissions: req.auth!.permissions
         }
       };

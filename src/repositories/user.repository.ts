@@ -9,7 +9,22 @@ export type UserFilter = Partial<Pick<User, 'id' | 'email' | 'status'>> & {
   q?: string; // name/email search
 };
 
+export type UserQueryOptions = {
+  excludeRoleSlugs?: string[];
+  onlyRoleSlugs?: string[];
+  hotelIds?: bigint[];
+  includeUserIds?: bigint[];
+};
+
 export interface UserRepository extends BaseRepository<User, UserFilter> {
+  paginateScoped(
+    filter: UserFilter,
+    page: number,
+    pageSize: number,
+    order?: Record<string, 'ASC' | 'DESC'>,
+    options?: UserQueryOptions
+  ): Promise<Page<User>>;
+  countScoped(filter: UserFilter, options?: UserQueryOptions): Promise<number>;
   findByEmail(email: string): Promise<User | null>;
   listByHotel(
     hotelId: bigint,
@@ -18,4 +33,16 @@ export interface UserRepository extends BaseRepository<User, UserFilter> {
   attachToHotel(userId: bigint, hotelId: bigint, role?: RoleSlug): Promise<void>;
   detachFromHotel(userId: bigint, hotelId: bigint): Promise<void>;
   assignRoleBySlug(userId: bigint, roleSlug: string, hotelId?: bigint): Promise<void>;
+  getUserRoleSlugs(userId: bigint): Promise<string[]>;
+  getUserHotelIds(userId: bigint): Promise<bigint[]>;
+  createWithRoleAndHotel(
+    user: Partial<User>,
+    roleSlug: RoleSlug,
+    hotelId?: bigint
+  ): Promise<User>;
+  updateUserRoleAndHotel(
+    userId: bigint,
+    roleSlug: RoleSlug,
+    hotelId?: bigint
+  ): Promise<void>;
 }

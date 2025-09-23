@@ -73,9 +73,13 @@ Database terdiri dari 8 tabel utama:
 Seeder akan mengisi database dengan data development berikut:
 
 ### Users
-- `admin@example.com` / `admin123` (Super Administrator)
-- `manager@example.com` / `manager123` (Manager)
-- `user@example.com` / `user123` (Regular User)
+- `admin@example.com` / `admin123` — Super Administrator
+- `internal.admin@example.com` / `admin123` — Internal Admin
+- `owner@example.com` / `owner123` — Hotel Owner (Hotel Alpha)
+- `owner2@example.com` / `owner123` — Hotel Owner (Hotel Beta)
+- `manager@example.com` / `manager123` — Hotel Manager (Hotel Beta)
+- `marketing@example.com` / `marketing123` — Hotel Marketing (Hotel Alpha)
+- `user@example.com` / `user123` — Regular User
 
 ### Permissions
 - `users:read`, `users:write`
@@ -83,12 +87,18 @@ Seeder akan mengisi database dengan data development berikut:
 - `roles:manage`, `permissions:manage`
 
 ### Roles
-- **superadmin**: Memiliki semua permissions
-- **manager**: hotels:read, hotels:write, users:read
-- **user**: hotels:read
+- Global (internal):
+  - **superadmin**: akses penuh (global)
+  - **admin**: administratif global (subset dari superadmin)
+- Tenant (eksternal, scope hotel):
+  - **owner**: admin penuh untuk hotel sendiri
+  - **manager**: manage hotel dan baca users pada hotel
+  - **marketing**: akses fitur pemasaran pada hotel
+  - **user**: akses terbatas (baca hotel)
 
 ### Sample Data
-- Hotel "Hotel Contoh" dengan manager dan user sebagai member
+- Hotel **Alpha** dimiliki oleh `owner@example.com` dengan member `marketing@example.com` (Marketing) dan `user@example.com` (Regular User)
+- Hotel **Beta** dimiliki oleh `owner2@example.com` dengan member `manager@example.com` (Manager)
 
 ## Important Notes
 
