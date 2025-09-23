@@ -12,6 +12,8 @@ export type UserFilter = Partial<Pick<User, 'id' | 'email' | 'status'>> & {
 export type UserQueryOptions = {
   excludeRoleSlugs?: string[];
   onlyRoleSlugs?: string[];
+  hotelIds?: bigint[];
+  includeUserIds?: bigint[];
 };
 
 export interface UserRepository extends BaseRepository<User, UserFilter> {
@@ -32,4 +34,15 @@ export interface UserRepository extends BaseRepository<User, UserFilter> {
   detachFromHotel(userId: bigint, hotelId: bigint): Promise<void>;
   assignRoleBySlug(userId: bigint, roleSlug: string, hotelId?: bigint): Promise<void>;
   getUserRoleSlugs(userId: bigint): Promise<string[]>;
+  getUserHotelIds(userId: bigint): Promise<bigint[]>;
+  createWithRoleAndHotel(
+    user: Partial<User>,
+    roleSlug: RoleSlug,
+    hotelId?: bigint
+  ): Promise<User>;
+  updateUserRoleAndHotel(
+    userId: bigint,
+    roleSlug: RoleSlug,
+    hotelId?: bigint
+  ): Promise<void>;
 }

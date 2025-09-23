@@ -75,9 +75,10 @@ Seeder akan mengisi database dengan data development berikut:
 ### Users
 - `admin@example.com` / `admin123` — Super Administrator
 - `internal.admin@example.com` / `admin123` — Internal Admin
-- `owner@example.com` / `owner123` — Hotel Owner
-- `manager@example.com` / `manager123` — Hotel Manager
-- `marketing@example.com` / `marketing123` — Hotel Marketing
+- `owner@example.com` / `owner123` — Hotel Owner (Hotel Alpha)
+- `owner2@example.com` / `owner123` — Hotel Owner (Hotel Beta)
+- `manager@example.com` / `manager123` — Hotel Manager (Hotel Beta)
+- `marketing@example.com` / `marketing123` — Hotel Marketing (Hotel Alpha)
 - `user@example.com` / `user123` — Regular User
 
 ### Permissions
@@ -96,7 +97,8 @@ Seeder akan mengisi database dengan data development berikut:
   - **user**: akses terbatas (baca hotel)
 
 ### Sample Data
-- Hotel "Hotel Contoh" dimiliki oleh `owner@example.com` dengan member `manager`, `marketing`, dan `user`
+- Hotel **Alpha** dimiliki oleh `owner@example.com` dengan member `marketing@example.com` (Marketing) dan `user@example.com` (Regular User)
+- Hotel **Beta** dimiliki oleh `owner2@example.com` dengan member `manager@example.com` (Manager)
 
 ## Important Notes
 

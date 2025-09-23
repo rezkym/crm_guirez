@@ -36,6 +36,12 @@ export async function seedDevUsers() {
       status: "active",
     },
     {
+      email: "owner2@example.com",
+      name: "Hotel Owner 2",
+      password: hashPassword("owner123"),
+      status: "active",
+    },
+    {
       email: "manager@example.com",
       name: "Hotel Manager",
       password: hashPassword("manager123"),

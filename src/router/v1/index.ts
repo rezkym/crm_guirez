@@ -4,6 +4,7 @@ import { healthController, healthV1 } from '../../controllers';
 import { createAuthRouter } from './auth.router';
 import { createMeRouter } from './me.router';
 import { createUsersRouter } from './users.router';
+import { createHotelsRouter } from './hotels.router';
 import { getDependencies } from '../../config/dependencies';
 
 const v1Router: Router = Router();
@@ -18,7 +19,7 @@ export const setupAuthRoutes = () => {
     console.log('Dependencies:', Object.keys(dependencies));
     console.log('usersService available:', !!dependencies.usersService);
     
-    const { authService, usersService } = dependencies;
+    const { authService, usersService, hotelsService } = dependencies;
     
     // Auth routes
     v1Router.use('/auth', createAuthRouter(authService));
@@ -32,6 +33,13 @@ export const setupAuthRoutes = () => {
       v1Router.use('/users', createUsersRouter(usersService, authService));
     } else {
       console.log('usersService not available, skipping users routes');
+    }
+
+    if (hotelsService) {
+      console.log('Setting up hotels routes with hotelsService');
+      v1Router.use('/hotels', createHotelsRouter(hotelsService, authService));
+    } else {
+      console.log('hotelsService not available, skipping hotels routes');
     }
     
     console.log('Auth routes setup successfully');

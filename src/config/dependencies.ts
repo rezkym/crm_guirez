@@ -17,8 +17,11 @@ import { UserCredentialsRepoTypeORM } from '../repositories/typeorm/user.credent
 import AppDataSource from '../data/typeorm-data-source';
 import { AuthService } from '../services/auth.service';
 import { UsersService } from '../services/users.service';
+import { HotelsService } from '../services/hotels.service';
 import { UserRepositoryTypeORM } from '../repositories/typeorm/user.repository.typeorm';
+import { HotelRepositoryTypeORM } from '../repositories/typeorm/hotel.repository.typeorm';
 import { UserRepository } from '../repositories/user.repository';
+import { HotelRepository } from '../repositories/hotel.repository';
 import { TokenService } from '../services/token.service';
 
 export interface AppDependencies {
@@ -28,6 +31,8 @@ export interface AppDependencies {
   dataSource?: DataSource;
   usersService?: UsersService;
   userRepository?: UserRepository;
+  hotelsService?: HotelsService;
+  hotelRepository?: HotelRepository;
 }
 
 let dependencies: AppDependencies | null = null;
@@ -53,6 +58,8 @@ export async function initializeDependencies(): Promise<AppDependencies> {
   let dataSource: DataSource | undefined;
   let userRepository: UserRepository | undefined;
   let usersService: UsersService | undefined;
+  let hotelRepository: HotelRepository | undefined;
+  let hotelsService: HotelsService | undefined;
 
   if (dataBackend === 'db') {
     // Initialize TypeORM DataSource
@@ -68,7 +75,10 @@ export async function initializeDependencies(): Promise<AppDependencies> {
     tokenStore = new TokenStoreTypeORM(dataSource);
     userCredentialsRepo = new UserCredentialsRepoTypeORM(dataSource);
     userRepository = new UserRepositoryTypeORM(dataSource);
-    usersService = new UsersService(userRepository, passwordService);
+    usersService = new UsersService(userRepository, passwordService, hotelRepository);
+
+    hotelRepository = new HotelRepositoryTypeORM(dataSource);
+    hotelsService = new HotelsService(hotelRepository);
     
     console.log('Using TypeORM adapters for auth data');
   } else {
@@ -100,7 +110,9 @@ export async function initializeDependencies(): Promise<AppDependencies> {
     rateLimitService,
     dataSource,
     usersService,
-    userRepository
+    userRepository,
+    hotelsService,
+    hotelRepository,
   };
 
   // Setup cleanup interval
