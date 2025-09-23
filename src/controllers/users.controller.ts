@@ -120,13 +120,15 @@ export class UsersController {
   async update(req: Request, res: Response): Promise<void> {
     try {
       const id = BigInt(req.params.id);
-      const { email, name, password, status } = req.body || {};
+      const { email, name, password, status, role, roleSlug, hotel_id, hotelId } = req.body || {};
 
       const updatePayload = {
         email,
         name,
         password,
         status,
+        roleSlug: (roleSlug || role)?.toString()?.toLowerCase()?.trim(),
+        hotelId: hotelId ? BigInt(hotelId) : hotel_id ? BigInt(hotel_id) : undefined,
       };
 
       const updated = await this.usersService.update(id, updatePayload, req.auth);
