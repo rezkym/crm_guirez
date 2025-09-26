@@ -1,6 +1,6 @@
 import { AuthContext } from '../domain/auth';
 import { Hotel } from '../domain';
-import { ForbiddenError } from '../core/http/error';
+import { ForbiddenError, ValidationError } from '../core/http/error';
 import { HotelRepository, HotelFilter } from '../repositories/hotel.repository';
 import { isInternalRoleSlug } from '../rbac';
 
@@ -17,12 +17,19 @@ export interface UpdateHotelDTO {
 }
 
 const ALLOWED_STATUSES: Hotel['status'][] = ['active', 'suspended', 'freeze'];
+const ALLOWED_SORT_FIELDS: (keyof Hotel)[] = ['id', 'name', 'created_at'];
 
 export class HotelsService {
   constructor(private readonly repo: HotelRepository) {}
 
-  async list(filter: HotelFilter & { page?: number; pageSize?: number }, actor?: AuthContext) {
-    const { page = 1, pageSize = 20, ...rest } = filter || {};
+  async list(filter: HotelFilter & { page?: number; pageSize?: number, sortBy?: keyof Hotel, sortOrder?: 'ASC' | 'DESC' }, actor?: AuthContext) {
+    const { page = 1, pageSize = 20, sortBy = 'id', sortOrder = 'DESC', ...rest } = filter || {};
+
+    if (sortBy && !ALLOWED_SORT_FIELDS.includes(sortBy)) {
+      throw new ValidationError(`Invalid sortBy field: ${sortBy}`);
+    }
+
+    const sort = { [sortBy]: sortOrder };
 
     const normalizedFilter: HotelFilter = { ...rest };
 
@@ -37,7 +44,7 @@ export class HotelsService {
       normalizedFilter.owner_user_id = BigInt(actor.userId);
     }
 
-    return this.repo.paginate(normalizedFilter, page, pageSize, { id: 'DESC' });
+    return this.repo.paginate(normalizedFilter, page, pageSize, sort);
   }
 
   async getById(id: bigint, actor?: AuthContext): Promise<Hotel | null> {
@@ -103,7 +110,11 @@ export class HotelsService {
     }
 
     this.assertActorCanAccessHotel(actor, hotel);
-    await this.repo.softDeleteById(id);
+    try {
+      await this.repo.softDeleteById(id);
+    } catch (error: any) {
+      throw new Error(`Failed to remove hotel: ${error.message}`);
+    }
     return { success: true };
   }
 

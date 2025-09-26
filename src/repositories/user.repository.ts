@@ -7,6 +7,7 @@ import { RoleSlug } from '../rbac';
 export type UserFilter = Partial<Pick<User, 'id' | 'email' | 'status'>> & {
   hotel_id?: bigint;
   q?: string; // name/email search
+  withDeleted?: boolean;
 };
 
 export type UserQueryOptions = {
