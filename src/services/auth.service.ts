@@ -177,20 +177,26 @@ export class AuthService {
     const startTime = Date.now();
     
     try {
+      // Verify token and get session/user info first
+      const verificationResult = await this.tokenService['tokenStore'].verifyRefresh(refreshToken);
+      if (verificationResult.status !== 'valid' || !verificationResult.tokenRecord) {
+        throw new Error('Invalid refresh token');
+      }
+
+      // Check user status
+      const user = await this.userRepo.findById(verificationResult.tokenRecord.userId);
+      if (!user || user.status !== UserStatus.ACTIVE) {
+        throw new Error('User account is not active');
+      }
+
       const result = await this.tokenService.refreshTokens(refreshToken);
       
       // Update session activity dengan UA/IP tracking
-      if (result.refreshToken) {
-        // Get session dari token untuk update activity
-        const verificationResult = await this.tokenService['tokenStore'].verifyRefresh(result.refreshToken);
-        if (verificationResult.status === 'valid' && verificationResult.tokenRecord) {
-          await this.sessionStore.updateSessionActivity(
-            verificationResult.tokenRecord.sessionId,
-            userAgent,
-            ipAddress
-          );
-        }
-      }
+      await this.sessionStore.updateSessionActivity(
+        verificationResult.tokenRecord.sessionId,
+        userAgent,
+        ipAddress
+      );
       
       // Record success metrics
       const duration = Date.now() - startTime;
@@ -275,6 +281,10 @@ export class AuthService {
       throw new Error('User not found');
     }
 
+    if (user.status !== UserStatus.ACTIVE) {
+      throw new Error('User account is not active');
+    }
+
     const roleSlugs = user.roles.map(role => role.slug);
 
     return {
@@ -304,7 +314,7 @@ export class AuthService {
     
     const user = await this.userRepo.findById(session.userId);
     
-    if (!user) {
+    if (!user || user.status !== UserStatus.ACTIVE) {
       return null;
     }
 

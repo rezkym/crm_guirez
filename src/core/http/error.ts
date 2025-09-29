@@ -38,6 +38,13 @@ export class ConflictError extends HttpError {
         super(HTTP_STATUS.CONFLICT, m, d);
     }
 }
+
+export class ValidationError extends HttpError {
+    constructor(m = "Validation Error", d?: unknown) {
+        super(HTTP_STATUS.UNPROCESSABLE_ENTITY, m, d);
+    }
+}
+
 export class UnprocessableEntityError extends HttpError {
     constructor(m = "Unprocessable Entity", d?: unknown) {
         super(HTTP_STATUS.UNPROCESSABLE_ENTITY, m, d);
